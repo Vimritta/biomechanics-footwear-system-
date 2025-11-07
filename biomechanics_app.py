@@ -138,20 +138,33 @@ if st.session_state.step == 1:
 
 # ---------------------------
 # Step 2: Foot details & activity
-# ---------------------------
 elif st.session_state.step == 2:
     st.header("Step 2 — Foot & Activity Details")
 
-    # Weight categories slider: show labels
-    weight_index = st.slider("Weight group (kg)", 0, 3, 1)
-    weight_map = ["Under 50 kg", "50–70 kg", "71–90 kg", "Over 90 kg"]
-    weight_cat = weight_map[weight_index]
+    # Weight group dropdown
+    weight_cat = st.selectbox(
+        "Select your Weight Group",
+        ["Under 50 kg", "50–70 kg", "71–90 kg", "Over 90 kg"]
+    )
 
-    # Activity slider 0=Low,1=Moderate,2=High
-    activity_index = st.slider("Daily activity level", 0, 2, 1)
-    activity_map = ["Low (mostly sitting)", "Moderate (walking/standing sometimes)", "High (frequent walking/running)"]
-    activity_label = activity_map[activity_index]
-    activity_key = ["Low", "Moderate", "High"][activity_index]
+    # Activity level dropdown
+    activity_label = st.selectbox(
+        "Select your Daily Activity Level",
+        [
+            "Low (mostly sitting)",
+            "Moderate (walking/standing sometimes)",
+            "High (frequent walking/running)"
+        ]
+    )
+
+    # Create a short version (used later for background color logic)
+    if "Low" in activity_label:
+        activity_key = "Low"
+    elif "Moderate" in activity_label:
+        activity_key = "Moderate"
+    else:
+        activity_key = "High"
+
 
     # Foot type visualization using small icons
     st.write("👣 Foot Type — click to select")
