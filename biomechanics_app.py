@@ -1,4 +1,4 @@
-# app.py — enhanced visual styling (white dropdowns + pink download button)
+# app.py — FootFit Analyzer (light pastel violet navigation + white dropdowns)
 import streamlit as st
 import os
 from PIL import Image
@@ -88,13 +88,17 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 # Themes
 # ---------------------------
 def set_white_theme():
-    """White background + black text + white dropdowns + black text inside options"""
+    """White theme + white dropdowns + light pastel violet navigation buttons"""
     css = """
     <style>
     .stApp { background-color: white; color: black; }
-    .stMarkdown, .stText, .stSelectbox, .stRadio, .stButton, label, div, p, h1, h2, h3, h4, h5, h6 {
+
+    /* General text color */
+    .stMarkdown, .stText, .stSelectbox, .stRadio, label, div, p, h1, h2, h3, h4, h5, h6 {
         color: black !important;
     }
+
+    /* Dropdowns: white background, black text */
     select, textarea, input {
         background-color: white !important;
         color: black !important;
@@ -102,7 +106,7 @@ def set_white_theme():
         border-radius: 6px;
         padding: 6px;
     }
-    /* Force dropdown text to black + background white */
+
     div[data-baseweb="select"] {
         background-color: white !important;
         color: black !important;
@@ -114,18 +118,20 @@ def set_white_theme():
         background-color: white !important;
         color: black !important;
     }
-    /* White buttons with black text */
+
+    /* Navigation buttons (Next, Back) — light pastel violet */
     .stButton>button {
-        background-color: white !important;
+        background-color: #d9c2f0 !important;
         color: black !important;
-        border: 1px solid #000 !important;
+        border: 1px solid #b495d6 !important;
         border-radius: 6px;
         font-weight: 600 !important;
     }
     .stButton>button:hover {
-        background-color: #f0f0f0 !important;
+        background-color: #cbb3eb !important;
     }
-    /* Pink download button */
+
+    /* Download button — pink */
     div[data-testid="stDownloadButton"] > button {
         background-color: #ff4da6 !important;
         color: black !important;
@@ -141,16 +147,18 @@ def set_white_theme():
     st.markdown(css, unsafe_allow_html=True)
 
 def set_activity_theme(activity_key):
-    """Auto color change based on activity level"""
+    """Activity-based theme (Step 3)"""
     if activity_key == "Low":
         color = "#d8ecff"; accent = "#3478b6"
     elif activity_key == "Moderate":
         color = "#e8f9e9"; accent = "#2e8b57"
     else:
         color = "#ffe9d6"; accent = "#e55300"
+
     css = f"""
     <style>
     .stApp {{ background: {color}; color: #111 !important; }}
+
     .summary-card {{
         background: white; border-radius: 10px;
         padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
@@ -162,22 +170,20 @@ def set_activity_theme(activity_key):
         background: rgba(255,255,255,0.6);
         font-weight: 600; color: #111;
     }}
-    div, p, span, h1, h2, h3, h4, h5, h6 {{
-        color: #111 !important;
-        font-weight: 600 !important;
-    }}
-    /* White buttons */
+
+    /* Step 3 Buttons — pastel violet Back & Next */
     .stButton>button {{
-        background-color: white !important;
+        background-color: #d9c2f0 !important;
         color: black !important;
-        border: 1px solid #000 !important;
+        border: 1px solid #b495d6 !important;
         border-radius: 6px;
         font-weight: 600 !important;
     }}
     .stButton>button:hover {{
-        background-color: #f0f0f0 !important;
+        background-color: #cbb3eb !important;
     }}
-    /* Pink download button for Step 3 */
+
+    /* Download button remains pink */
     div[data-testid="stDownloadButton"] > button {{
         background-color: #ff4da6 !important;
         color: black !important;
@@ -222,7 +228,7 @@ st.write("A biomechanics-informed recommender that suggests *shoe brand, materia
 st.markdown("---")
 
 # ---------------------------
-# STEP 1: Personal Info
+# STEP 1
 # ---------------------------
 if st.session_state.step == 1:
     set_white_theme()
@@ -243,7 +249,7 @@ if st.session_state.step == 1:
             st.session_state.step = 2
 
 # ---------------------------
-# STEP 2: Foot & Activity
+# STEP 2
 # ---------------------------
 elif st.session_state.step == 2:
     set_white_theme()
@@ -291,7 +297,7 @@ elif st.session_state.step == 2:
             st.session_state.step = 3
 
 # ---------------------------
-# STEP 3: Recommendation
+# STEP 3
 # ---------------------------
 elif st.session_state.step == 3:
     st.header("Step 3 — Recommendation & Biomechanics Summary")
