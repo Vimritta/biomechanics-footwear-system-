@@ -1,4 +1,4 @@
-# app.py — enhanced visual styling (white buttons + dropdowns, black text)
+# app.py — enhanced visual styling (white dropdowns + pink download button)
 import streamlit as st
 import os
 from PIL import Image
@@ -88,7 +88,7 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 # Themes
 # ---------------------------
 def set_white_theme():
-    """White background + black text + white option boxes + white buttons"""
+    """White background + black text + white dropdowns + black text inside options"""
     css = """
     <style>
     .stApp { background-color: white; color: black; }
@@ -102,11 +102,19 @@ def set_white_theme():
         border-radius: 6px;
         padding: 6px;
     }
-    .stSelectbox div[data-baseweb="select"] > div {
+    /* Force dropdown text to black + background white */
+    div[data-baseweb="select"] {
         background-color: white !important;
         color: black !important;
     }
-    /* All buttons white with black text */
+    div[data-baseweb="select"] span {
+        color: black !important;
+    }
+    div[data-baseweb="select"] div {
+        background-color: white !important;
+        color: black !important;
+    }
+    /* White buttons with black text */
     .stButton>button {
         background-color: white !important;
         color: black !important;
@@ -117,12 +125,23 @@ def set_white_theme():
     .stButton>button:hover {
         background-color: #f0f0f0 !important;
     }
+    /* Pink download button */
+    div[data-testid="stDownloadButton"] > button {
+        background-color: #ff4da6 !important;
+        color: black !important;
+        border: none !important;
+        border-radius: 8px;
+        font-weight: bold !important;
+    }
+    div[data-testid="stDownloadButton"] > button:hover {
+        background-color: #ff66b2 !important;
+    }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 def set_activity_theme(activity_key):
-    """Auto color change based on activity level (used in Step 3) + dark bold font + white buttons"""
+    """Auto color change based on activity level"""
     if activity_key == "Low":
         color = "#d8ecff"; accent = "#3478b6"
     elif activity_key == "Moderate":
@@ -147,7 +166,7 @@ def set_activity_theme(activity_key):
         color: #111 !important;
         font-weight: 600 !important;
     }}
-    /* White buttons for Step 3 */
+    /* White buttons */
     .stButton>button {{
         background-color: white !important;
         color: black !important;
@@ -157,6 +176,17 @@ def set_activity_theme(activity_key):
     }}
     .stButton>button:hover {{
         background-color: #f0f0f0 !important;
+    }}
+    /* Pink download button for Step 3 */
+    div[data-testid="stDownloadButton"] > button {{
+        background-color: #ff4da6 !important;
+        color: black !important;
+        border: none !important;
+        border-radius: 8px;
+        font-weight: bold !important;
+    }}
+    div[data-testid="stDownloadButton"] > button:hover {{
+        background-color: #ff66b2 !important;
     }}
     </style>
     """
