@@ -1,4 +1,4 @@
-# app.py — optional-box version (no sliders)
+# app.py — updated visual styling for steps 1 & 2 (white background + black text)
 import streamlit as st
 import os
 from PIL import Image
@@ -33,7 +33,9 @@ def speak_text(text):
     """
     st.components.v1.html(html, height=0)
 
+# ---------------------------
 # Recommender logic
+# ---------------------------
 def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gender):
     brands = {
         "Running shoes": ["Nike Air Zoom", "ASICS Gel-Nimbus", "Adidas Ultraboost"],
@@ -82,11 +84,23 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 
     return brand, material, justification
 
+# ---------------------------
+# Themes
+# ---------------------------
+def set_white_theme():
+    """White background with black text (used in Step 1 & Step 2)"""
+    css = """
+    <style>
+    .stApp { background-color: white; color: black; }
+    .stMarkdown, .stText, .stSelectbox, .stRadio, .stButton, label, div, p, h1, h2, h3, h4, h5, h6 {
+        color: black !important;
+    }
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
 
-# ---------------------------
-# UI theme
-# ---------------------------
 def set_activity_theme(activity_key):
+    """Auto color change based on activity level (used in Step 3)"""
     if activity_key == "Low":
         color = "#d8ecff"; accent = "#3478b6"
     elif activity_key == "Moderate":
@@ -104,7 +118,7 @@ def set_activity_theme(activity_key):
     st.markdown(css, unsafe_allow_html=True)
 
 # ---------------------------
-# Session init
+# Session initialization
 # ---------------------------
 if 'step' not in st.session_state:
     st.session_state.step = 1
@@ -113,9 +127,9 @@ if 'inputs' not in st.session_state:
 if 'analyze_clicked' not in st.session_state:
     st.session_state.analyze_clicked = False
 if 'foot_type' not in st.session_state:
-    st.session_state.foot_type = st.session_state.inputs.get("foot_type", "Normal Arch")
+    st.session_state.foot_type = "Normal Arch"
 if 'footwear_pref' not in st.session_state:
-    st.session_state.footwear_pref = st.session_state.inputs.get("footwear_pref", "Running shoes")
+    st.session_state.footwear_pref = "Running shoes"
 
 # ---------------------------
 # Header
@@ -133,16 +147,13 @@ st.write("A biomechanics-informed recommender that suggests *shoe brand, **mater
 st.markdown("---")
 
 # ---------------------------
-# STEP 1: Personal info (dropdowns)
+# STEP 1: Personal Info
 # ---------------------------
 if st.session_state.step == 1:
+    set_white_theme()
     st.header("Step 1 — Personal Info")
 
-    age_label = st.selectbox(
-        "Select your Age Group",
-        ["Under 18", "18–25", "26–35", "36–50", "51–65", "Over 65"],
-        index=1
-    )
+    age_label = st.selectbox("Select your Age Group", ["Under 18", "18–25", "26–35", "36–50", "51–65", "Over 65"], index=1)
     gender_label = st.selectbox("Select Gender", ["Male", "Female"], index=0)
     weight_label = st.selectbox("Select Weight Category", ["Under 50 kg", "50–70 kg", "71–90 kg", "Over 90 kg"], index=1)
 
@@ -157,9 +168,10 @@ if st.session_state.step == 1:
             st.session_state.step = 2
 
 # ---------------------------
-# STEP 2: Foot & activity (dropdowns)
+# STEP 2: Foot & Activity
 # ---------------------------
 elif st.session_state.step == 2:
+    set_white_theme()
     st.header("Step 2 — Foot & Activity Details")
 
     activity_label = st.selectbox(
@@ -168,7 +180,9 @@ elif st.session_state.step == 2:
         index=1
     )
     st.session_state.inputs["activity_label"] = activity_label
-    st.session_state.inputs["activity_key"] = "Low" if "Low" in activity_label else ("Moderate" if "Moderate" in activity_label else "High")
+    st.session_state.inputs["activity_key"] = (
+        "Low" if "Low" in activity_label else ("Moderate" if "Moderate" in activity_label else "High")
+    )
 
     st.subheader("👣 Foot Type — choose one")
     foot_options = [("Flat Arch","flat.png"), ("Normal Arch","normal.png"), ("High Arch","high_arch.png")]
@@ -221,6 +235,7 @@ elif st.session_state.step == 3:
     foot_type = get_val("foot_type", "Normal Arch")
     footwear_pref = get_val("footwear_pref", "Running shoes")
 
+    # Auto color theme by activity
     set_activity_theme(activity_key)
 
     col_a1, col_a2, col_a3 = st.columns([1,1,2])
@@ -243,9 +258,10 @@ elif st.session_state.step == 3:
             st.markdown(f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>", unsafe_allow_html=True)
         speak_text(f"Recommendation ready. {brand} recommended.")
 
+    # Bold text only
     summary_md = f"""
     <div class="summary-card">
-      <h3>🧠 Biomechanics Summary</h3>
+      <h3>🧠 <b>Biomechanics Summary</b></h3>
       <p class="highlight-box">
         👤 <b>Age:</b> {age_group} &nbsp; 🚻 <b>Gender:</b> {gender} <br/>
         ⚖️ <b>Weight:</b> {weight_group} &nbsp; 🏃 <b>Activity:</b> {activity_label} <br/>
@@ -309,17 +325,6 @@ elif st.session_state.step == 3:
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
-
-    st.markdown("---")
-    st.caption("DEBUG — session_state values (for troubleshooting):")
-    debug_vals = {
-        "step": st.session_state.step,
-        "inputs": st.session_state.inputs,
-        "foot_type": st.session_state.get("foot_type"),
-        "footwear_pref": st.session_state.get("footwear_pref"),
-        "analyze_clicked": st.session_state.analyze_clicked
-    }
-    st.text(debug_vals)
 
 
 
