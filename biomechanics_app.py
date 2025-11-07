@@ -1,205 +1,174 @@
-# app.py — FootFit Analyzer (Final Professional Version)
+# app.py
 import streamlit as st
+import pyttsx3
 import random
-from PIL import Image
-import os
 
-st.set_page_config(page_title="FootFit Analyzer", layout="wide", page_icon="👟")
+# ---------------------------
+# PAGE CONFIG
+# ---------------------------
+st.set_page_config(page_title="👟 FootFit Analyzer", layout="wide", page_icon="👟")
 
-# -------------------- Helper Functions --------------------
-def load_image(filename):
-    path = os.path.join("images", filename)
-    return Image.open(path) if os.path.exists(path) else None
+# ---------------------------
+# GLOBAL STYLE
+# ---------------------------
+st.markdown("""
+    <style>
+    body {
+        background-color: white !important;
+    }
+    .step-box {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .step-title {
+        color: black;
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+    .stRadio > div {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .stRadio > div > label {
+        background-color: #f8f8f8;
+        color: black;
+        font-weight: 700;
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: 2px solid #000;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .stRadio > div > label:hover {
+        background-color: #d3d3d3;
+    }
+    .stRadio > div > label[data-checked="true"] {
+        background-color: #000;
+        color: white !important;
+    }
+    .result-box {
+        padding: 20px;
+        border-radius: 16px;
+        color: white;
+        font-weight: 700;
+    }
+    .bold-text {
+        font-weight: 800;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# ---------------------------
+# HELPER FUNCTIONS
+# ---------------------------
+def biomechanical_analysis(age_group, gender, weight, activity, foot_type, footwear_pref):
+    # Simplified rule-based biomechanical logic
+    cushioning = ""
+    arch_support = ""
+    recommended_shoe = ""
+    material = ""
+    justification = ""
+    tip = ""
+
+    if activity == "Running":
+        recommended_shoe = "Cushioned Running Shoes"
+        material = "Breathable Mesh with EVA Midsole"
+        justification = "Running requires shock absorption and flexibility for high-impact motion."
+        tip = "Replace your running shoes every 600–800 km to prevent injury."
+    elif activity == "Walking":
+        recommended_shoe = "Comfort Walking Shoes"
+        material = "Soft Leather with Rubber Outsole"
+        justification = "Walking needs comfort, midsole cushioning, and natural motion flexibility."
+        tip = "Choose shoes that bend easily at the ball of your foot."
+    elif activity == "Training / Gym":
+        recommended_shoe = "Cross Training Shoes"
+        material = "Synthetic Upper with Wide Base"
+        justification = "Training shoes provide stability for multidirectional movement."
+        tip = "Check the heel-to-toe drop for your comfort and stability."
+    elif activity == "Casual":
+        recommended_shoe = "Everyday Sneakers"
+        material = "Canvas or Knit Upper"
+        justification = "Casual wear needs style and moderate support for all-day comfort."
+        tip = "Use insoles for better posture support during long hours."
+    elif activity == "Hiking":
+        recommended_shoe = "Trail Hiking Boots"
+        material = "Waterproof Leather with Traction Sole"
+        justification = "Hiking requires ankle support, traction, and waterproofing."
+        tip = "Ensure good grip soles for steep or slippery surfaces."
+
+    # Adjust background color by activity
+    colors = {
+        "Running": "#008080",
+        "Walking": "#004080",
+        "Training / Gym": "#6A0DAD",
+        "Casual": "#2E8B57",
+        "Hiking": "#A0522D"
+    }
+    bg_color = colors.get(activity, "#333333")
+
+    return recommended_shoe, material, justification, tip, bg_color
 
 def speak_text(text):
-    js = f"""
-    <script>
-    var msg = new SpeechSynthesisUtterance("{text}");
-    msg.lang = 'en-US';
-    msg.rate = 1.0;
-    window.speechSynthesis.speak(msg);
-    </script>
-    """
-    st.markdown(js, unsafe_allow_html=True)
+    engine = pyttsx3.init()
+    engine.setProperty('rate', 150)
+    engine.say(text)
+    engine.runAndWait()
 
-def get_recommendation(foot_type, footwear, weight, activity):
-    """Rule-based recommender"""
-    if footwear == "Running shoes":
-        brand = "Nike Air Zoom Pegasus"
-        if "Flat" in foot_type:
-            material = "**Dual-density foam midsole**"
-            justification = "*Provides medial arch stability and support for overpronation.*"
-        elif "High" in foot_type:
-            material = "**Soft gel cushioning + mesh upper**"
-            justification = "*Offers high shock absorption and breathability for high arches.*"
-        else:
-            material = "**EVA midsole + knit upper**"
-            justification = "*Gives balanced flexibility and airflow for neutral runners.*"
+# ---------------------------
+# STEP 1: PERSONAL INFORMATION
+# ---------------------------
+st.markdown('<div class="step-box">', unsafe_allow_html=True)
+st.markdown('<div class="step-title">Step 1️⃣: Personal Information</div>', unsafe_allow_html=True)
 
-    elif footwear == "Cross-training shoes":
-        brand = "Reebok Nano X"
-        material = "**Dense EVA midsole + rubber outsole**"
-        justification = "*Provides side-to-side stability for multi-directional movement.*"
+age_group = st.radio("Select Age Group:", 
+    ["Under 18", "18–25", "26–35", "36–50", "51–65", "Over 65"],
+    horizontal=True)
 
-    elif footwear == "Casual/fashion sneakers":
-        brand = "Adidas Stan Smith"
-        material = "**Lightweight foam insole + leather upper**"
-        justification = "*Ensures everyday comfort and timeless style.*"
+gender = st.radio("Select Gender:", ["Male", "Female"], horizontal=True)
+weight = st.radio("Select Weight Range:", ["Under 50 kg", "50–70 kg", "71–90 kg", "Above 90 kg"], horizontal=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-    else:
-        brand = "Skechers On-the-Go Sandal"
-        material = "**Memory foam footbed + flexible sole**"
-        justification = "*Offers cushioned support and breathability for relaxed use.*"
+# ---------------------------
+# STEP 2: FOOT & PREFERENCE DETAILS
+# ---------------------------
+st.markdown('<div class="step-box">', unsafe_allow_html=True)
+st.markdown('<div class="step-title">Step 2️⃣: Foot & Preference Details</div>', unsafe_allow_html=True)
 
-    if "Over 90" in weight:
-        material += " and **reinforced heel padding**"
-        justification += " Adds durability for heavier body weight."
-    if "High" in activity:
-        justification += " Ideal for frequent movement and long wear."
+activity = st.radio("Select Activity Level:", ["Running", "Walking", "Training / Gym", "Casual", "Hiking"], horizontal=True)
+foot_type = st.radio("Select Foot Type:", ["Flat Foot", "Normal Arch", "High Arch"], horizontal=True)
+footwear_pref = st.radio("Preferred Type of Footwear:", ["Sport", "Casual", "Formal"], horizontal=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-    return brand, material, justification
+# ---------------------------
+# STEP 3: RECOMMENDATION ENGINE
+# ---------------------------
+recommended_shoe, material, justification, tip, bg_color = biomechanical_analysis(age_group, gender, weight, activity, foot_type, footwear_pref)
 
-def tip_of_day():
-    tips = [
-        "Stretch your calves daily to reduce heel strain.",
-        "Replace your shoes every 800 km of running.",
-        "Use orthotic insoles if you experience arch pain.",
-        "Let your shoes air-dry after workouts.",
-        "Do simple ankle rotations to strengthen stabilizer muscles."
-    ]
-    return random.choice(tips)
+st.markdown(f"""
+    <div class="result-box" style="background-color:{bg_color};">
+        <h3 class="bold-text">Step 3️⃣: Personalized Recommendation</h3>
+        <p class="bold-text">👟 <b>Recommended Footwear:</b> {recommended_shoe}</p>
+        <p class="bold-text">🧵 <b>Material Suggestion:</b> {material}</p>
+        <p class="bold-text">📊 <b>Biomechanical Justification:</b> {justification}</p>
+        <p class="bold-text">💡 <b>Tip of the Day:</b> {tip}</p>
+    </div>
+""", unsafe_allow_html=True)
 
-# -------------------- Page Setup --------------------
-if "step" not in st.session_state:
-    st.session_state.step = 1
+# ---------------------------
+# VOICE ASSISTANT
+# ---------------------------
+if st.button("🔊 Read Out Recommendation"):
+    voice_text = f"Your recommended footwear is {recommended_shoe}. The suggested material is {material}. {justification}. Tip of the day: {tip}."
+    speak_text(voice_text)
+    st.success("Voice assistant activated successfully!")
 
-# -------------------- Step 1 --------------------
-if st.session_state.step == 1:
-    st.markdown(
-        "<h1 style='color:black; font-weight:900;'>👟 Step 1 — Personal Information</h1>",
-        unsafe_allow_html=True,
-    )
-    speak_text("Welcome to FootFit Analyzer. Let's start with your personal information.")
+st.markdown("<br><center>👟 <b>Powered by FootFit Analyzer – Biomechanics meets AI</b></center>", unsafe_allow_html=True)
 
-    st.markdown("<div style='color:black; font-weight:bold;'>Select your age group:</div>", unsafe_allow_html=True)
-    age = st.radio("", ["Under 18", "18–25", "26–35", "36–50", "51–65", "Over 65"], horizontal=True)
-
-    st.markdown("<div style='color:black; font-weight:bold;'>Select your gender:</div>", unsafe_allow_html=True)
-    gender = st.radio("", ["Male", "Female"], horizontal=True)
-
-    st.markdown("<div style='color:black; font-weight:bold;'>Select your weight group:</div>", unsafe_allow_html=True)
-    weight = st.radio("", ["Under 50 kg", "50–70 kg", "71–90 kg", "Over 90 kg"], horizontal=True)
-
-    if st.button("Next →"):
-        st.session_state.age = age
-        st.session_state.gender = gender
-        st.session_state.weight = weight
-        st.session_state.step = 2
-        st.experimental_rerun()
-
-# -------------------- Step 2 --------------------
-elif st.session_state.step == 2:
-    st.markdown(
-        "<h1 style='color:black; font-weight:900;'>🦶 Step 2 — Foot & Activity Details</h1>",
-        unsafe_allow_html=True,
-    )
-    speak_text("Now, please provide your foot and activity details.")
-
-    st.markdown("<div style='color:black; font-weight:bold;'>Select your foot type:</div>", unsafe_allow_html=True)
-    foot_type = st.radio("", ["Flat Arch", "Normal Arch", "High Arch"], horizontal=True)
-
-    st.markdown("<div style='color:black; font-weight:bold;'>Select your daily activity level:</div>", unsafe_allow_html=True)
-    activity = st.radio(
-        "",
-        ["Low (mostly sitting)", "Moderate (walking/standing sometimes)", "High (frequent walking/running)"],
-        horizontal=True,
-    )
-
-    st.markdown("<div style='color:black; font-weight:bold;'>Select your preferred footwear type:</div>", unsafe_allow_html=True)
-    footwear = st.radio("", ["Running shoes", "Cross-training shoes", "Casual/fashion sneakers", "Sandals or slippers"], horizontal=True)
-
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("← Back"):
-            st.session_state.step = 1
-            st.experimental_rerun()
-    with col2:
-        if st.button("Next →"):
-            st.session_state.foot_type = foot_type
-            st.session_state.activity = activity
-            st.session_state.footwear = footwear
-            st.session_state.step = 3
-            st.experimental_rerun()
-
-# -------------------- Step 3 --------------------
-elif st.session_state.step == 3:
-    age = st.session_state.age
-    gender = st.session_state.gender
-    weight = st.session_state.weight
-    foot_type = st.session_state.foot_type
-    activity = st.session_state.activity
-    footwear = st.session_state.footwear
-
-    # Dynamic background
-    if "Low" in activity:
-        bg, color = "#E3F2FD", "#0D47A1"
-    elif "Moderate" in activity:
-        bg, color = "#E8F5E9", "#1B5E20"
-    else:
-        bg, color = "#FFF3E0", "#BF360C"
-
-    st.markdown(
-        f"""
-        <style>
-        [data-testid="stAppViewContainer"] {{
-            background-color: {bg} !important;
-        }}
-        h1, h2, h3, p, div {{
-            color: {color} !important;
-            font-weight: bold !important;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("<h1>🧠 Step 3 — Biomechanics Analysis & Recommendation</h1>", unsafe_allow_html=True)
-
-    brand, material, justification = get_recommendation(foot_type, footwear, weight, activity)
-    speak_text(f"Based on your biomechanics, we recommend the {brand}. {material}. {justification}")
-
-    st.markdown("### 📊 Biomechanics Summary Card")
-    st.markdown(
-        f"""
-        👤 **Age:** {age}  🚻 **Gender:** {gender}  
-        ⚖️ **Weight:** {weight}  🏃 **Activity:** {activity}  
-        🦶 **Foot Type:** {foot_type}  👟 **Preference:** {footwear}
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("---")
-    st.success(f"👟 **Recommended Footwear Brand:** {brand}")
-    st.info(f"🧵 **Material Suggestion:** {material}")
-    st.write(f"💬 *{justification}*")
-
-    # Virtual Shoe Wall (show shoe image)
-    st.markdown("### 👟 Virtual Shoe Wall")
-    if "Running" in footwear:
-        st.image(load_image("running.png"), width=250)
-    elif "Cross" in footwear:
-        st.image(load_image("cross.png"), width=250)
-    elif "Casual" in footwear:
-        st.image(load_image("casual.png"), width=250)
-    else:
-        st.image(load_image("sandal.png"), width=250)
-
-    st.markdown("---")
-    st.info(f"💡 **Tip of the Day:** {tip_of_day()}")
-
-    if st.button("🔁 Analyze Again"):
-        st.session_state.step = 1
-        st.experimental_rerun()
 
 
 
