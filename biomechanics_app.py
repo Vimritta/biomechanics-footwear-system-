@@ -1,14 +1,19 @@
-# app.py (fixed persistence for foot type & footwear preference)
+# app.py — reliable persistence + recommender fix
 import streamlit as st
 import os
 from PIL import Image
 import random
 import textwrap
 
+# ---------------------------
+# Config
+# ---------------------------
 st.set_page_config(page_title="FootFit Analyzer", layout="wide", page_icon="👟")
 IMAGE_DIR = "images"
 
-# ---------- Helpers ----------
+# ---------------------------
+# Helpers
+# ---------------------------
 def load_image(name):
     path = os.path.join(IMAGE_DIR, name)
     try:
@@ -19,6 +24,7 @@ def load_image(name):
     return None
 
 def speak_text(text):
+    # simple TTS via browser (works in Streamlit)
     html = f"""
     <script>
     const msg = new SpeechSynthesisUtterance({repr(text)});
@@ -45,6 +51,7 @@ def map_activity_index(i):
 def map_gender_index(i):
     return ["Male", "Female"][int(i)]
 
+# Recommender logic
 def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gender):
     brands = {
         "Running shoes": ["Nike Air Zoom", "ASICS Gel-Nimbus", "Adidas Ultraboost"],
@@ -54,6 +61,7 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
     }
     brand = random.choice(brands.get(footwear_pref, ["Generic FootFit Shoe"]))
 
+    # Material & justification
     if footwear_pref == "Running shoes":
         if foot_type == "Flat Arch":
             material = "**Dual-density EVA midsole + Arch-stability foam**"
@@ -74,10 +82,12 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
         material = "**Soft EVA footbed + contoured cork or foam support**"
         justification = "*Justification: Soft footbed for comfort and a contoured profile to support arches during light activity.*"
 
+    # Weight
     if weight_group == "Over 90 kg":
         material = material.replace("EVA", "Thick EVA").replace("Dense EVA", "High-density EVA").replace("soft foam", "high-density foam")
         justification = justification.replace("provides", "provides extra").replace("comfortable", "more durable and comfortable")
 
+    # Activity adaptation
     if "High" in activity:
         material += " **+ Breathable knit upper**"
         justification = justification[:-1] + " Ideal for frequent activity.*"
@@ -85,13 +95,19 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
         material += " **+ Soft rubber outsole for comfort**"
         justification = justification[:-1] + " Better for low-activity comfort.*"
 
+    # Gender nuance
     if gender == "Female":
         justification = "Designed for narrower heels and a more contoured fit. " + justification
+
+    # Age nuance
     if "Under 18" in age_group:
         brand = brand + " (Youth Edition)"
 
     return brand, material, justification
 
+# ---------------------------
+# UI theme (basic)
+# ---------------------------
 def set_activity_theme(activity_key):
     if activity_key == "Low":
         color = "#d8ecff"; accent = "#3478b6"
@@ -104,52 +120,65 @@ def set_activity_theme(activity_key):
     .stApp {{ background: {color}; }}
     .summary-card {{ background: white; border-radius: 10px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }}
     .highlight-box {{ border-left: 6px solid {accent}; padding:12px; border-radius:8px; background: rgba(255,255,255,0.6); }}
-    .shoe-wall img {{ max-width:120px; margin:6px; border-radius:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }}
     .foot-type-selected {{ border: 3px solid {accent}; border-radius:8px; padding:4px; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
-# ---------- Session init ----------
-if 'step' not in st.session_state: st.session_state.step = 1
-if 'inputs' not in st.session_state: st.session_state.inputs = {}
-if 'analyze_clicked' not in st.session_state: st.session_state.analyze_clicked = False
+# ---------------------------
+# Session init
+# ---------------------------
+if 'step' not in st.session_state:
+    st.session_state.step = 1
+if 'inputs' not in st.session_state:
+    st.session_state.inputs = {}
+if 'analyze_clicked' not in st.session_state:
+    st.session_state.analyze_clicked = False
 
-# Initialize persistent controls (safe defaults)
-if 'foot_type' not in st.session_state: st.session_state.foot_type = st.session_state.inputs.get("foot_type", "Normal Arch")
-if 'footwear_pref' not in st.session_state: st.session_state.footwear_pref = st.session_state.inputs.get("footwear_pref", "Running shoes")
+# persistent individual keys (keep in session_state so UI binds to them)
+if 'foot_type' not in st.session_state:
+    st.session_state.foot_type = st.session_state.inputs.get("foot_type", "Normal Arch")
+if 'footwear_pref' not in st.session_state:
+    st.session_state.footwear_pref = st.session_state.inputs.get("footwear_pref", "Running shoes")
 
-# ---------- Header ----------
+# ---------------------------
+# Header / logo
+# ---------------------------
 col1, col2 = st.columns([1, 8])
 with col1:
     logo = load_image("logo.png")
-    if logo: st.image(logo, width=110)
-    else: st.markdown("<h3>👟 FootFit Analyzer</h3>", unsafe_allow_html=True)
+    if logo:
+        st.image(logo, width=100)
+    else:
+        st.markdown("<h3>👟 FootFit Analyzer</h3>", unsafe_allow_html=True)
 with col2:
     st.markdown("<h1 style='margin-top:8px'>FootFit Analyzer — Biomechanics Footwear Profiler</h1>", unsafe_allow_html=True)
 st.write("A biomechanics-informed recommender that suggests **shoe brand**, **materials** and explains *why*.")
 st.markdown("---")
 
-# ---------- STEP 1 ----------
+# ---------------------------
+# STEP 1: Personal info
+# ---------------------------
 if st.session_state.step == 1:
     st.header("Step 1 — Personal Info")
     st.write("Use sliders for a modern interactive feel.")
 
-    age_i = st.slider("Age group", min_value=0, max_value=5, value=1, format="%d", key="age_i")
+    age_i = st.slider("Age group", 0, 5, 1, key="age_i")
     age_label = map_age_index(age_i)
     st.caption(f"Selected age group: **{age_label}**")
 
-    gender_i = st.slider("Gender (0 = Male, 1 = Female)", min_value=0, max_value=1, value=0, step=1, key="gender_i")
+    gender_i = st.slider("Gender (0 = Male, 1 = Female)", 0, 1, 0, key="gender_i")
     gender_label = map_gender_index(gender_i)
     st.caption(f"Selected gender: **{gender_label}**")
 
-    weight_val = st.slider("Weight (kg)", min_value=30, max_value=120, value=68, step=1, key="weight_val")
+    weight_val = st.slider("Weight (kg)", 30, 120, 68, key="weight_val")
     weight_label = map_weight_val(weight_val)
     st.caption(f"Weight category: **{weight_label}**")
 
     next_col1, next_col2 = st.columns([1,1])
     with next_col2:
         if st.button("Next →", key="to_step2"):
+            # always write into inputs at transition
             st.session_state.inputs.update({
                 "age_group": age_label,
                 "gender": gender_label,
@@ -157,117 +186,138 @@ if st.session_state.step == 1:
                 "weight_group": weight_label
             })
             st.session_state.step = 2
-            st.experimental_rerun()
+            # do not use experimental_rerun here; next render will show step 2
 
-# ---------- STEP 2 (FIXED) ----------
-# ---------- STEP 2 (FINAL FIXED) ----------
+# ---------------------------
+# STEP 2: Foot & activity
+# ---------------------------
 elif st.session_state.step == 2:
     st.header("Step 2 — Foot & Activity Details")
 
-    # Activity
-    activity_i = st.slider("Daily activity level (0=Low,1=Moderate,2=High)", 0, 2, 1, step=1)
+    # Activity slider
+    activity_i = st.slider("Daily activity level (0=Low,1=Moderate,2=High)", 0, 2, 1, key="activity_i")
     activity_label = map_activity_index(activity_i)
     st.caption(f"Selected: **{activity_label}**")
+    # store activity live (so if user hits Next later it's there)
+    st.session_state.inputs["activity_label"] = activity_label
+    st.session_state.inputs["activity_key"] = "Low" if "Low" in activity_label else ("Moderate" if "Moderate" in activity_label else "High")
 
-    # Foot type
+    # Foot type (images + buttons) — update st.session_state.foot_type
     st.subheader("👣 Foot Type — choose one")
-    foot_options = {
-        "Flat Arch": "flat.png",
-        "Normal Arch": "normal.png",
-        "High Arch": "high_arch.png"
-    }
-
-    # Initialize stored value if missing
-    if "foot_type" not in st.session_state:
-        st.session_state.foot_type = "Normal Arch"
-
+    foot_options = [("Flat Arch","flat.png"), ("Normal Arch","normal.png"), ("High Arch","high_arch.png")]
     cols = st.columns(len(foot_options))
-    for (label, img_file), col in zip(foot_options.items(), cols):
+    for (label, imgfile), col in zip(foot_options, cols):
         with col:
-            img = load_image(img_file)
+            img = load_image(imgfile)
+            selected = (st.session_state.foot_type == label)
             if img:
-                st.image(img, caption=label, width=140)
-            selected = st.session_state.foot_type == label
-            if st.button(f"{'✅ ' if selected else ''}{label}", key=f"ft_{label}"):
+                if selected:
+                    # visually mark selected
+                    st.markdown(f"<div class='foot-type-selected'>{st.image(img, caption=label, width=140) or ''}</div>", unsafe_allow_html=True)
+                else:
+                    st.image(img, caption=label, width=140)
+            else:
+                st.write(label)
+
+            # clicking a button sets session_state.foot_type
+            if st.button(label, key=f"ftbtn_{label}"):
                 st.session_state.foot_type = label
+                # also reflect into inputs so Step3 always finds it
+                st.session_state.inputs["foot_type"] = label
 
+    # show current picked foot type
     st.write(f"👉 Currently selected foot type: **{st.session_state.foot_type}**")
+    # ensure inputs has foot_type even if user didn't click the button (use default)
+    st.session_state.inputs["foot_type"] = st.session_state.get("foot_type", st.session_state.inputs.get("foot_type", "Normal Arch"))
 
-    # Footwear preference (selectbox with direct session binding)
+    # Footwear preference (selectbox) — bind to st.session_state.footwear_pref
     st.subheader("👟 Type of footwear you prefer")
     options = ["Running shoes", "Cross-training shoes", "Casual/fashion sneakers", "Sandals or slippers"]
-
-    if "footwear_pref" not in st.session_state:
-        st.session_state.footwear_pref = "Running shoes"
-
-    st.session_state.footwear_pref = st.selectbox(
-        "Select your preferred footwear type",
-        options,
-        index=options.index(st.session_state.footwear_pref)
-        if st.session_state.footwear_pref in options else 0,
-        key="footwear_pref"
-    )
+    # ensure a sensible default
+    if st.session_state.get("footwear_pref") is None:
+        st.session_state.footwear_pref = st.session_state.inputs.get("footwear_pref", "Running shoes")
+    # compute index safely
+    try:
+        idx = options.index(st.session_state.footwear_pref)
+    except Exception:
+        idx = 0
+    # show selectbox and write the chosen value into session_state immediately
+    new_pref = st.selectbox("Select your preferred footwear type", options, index=idx, key="footwear_select")
+    st.session_state.footwear_pref = new_pref
+    st.session_state.inputs["footwear_pref"] = new_pref
 
     st.write(f"👉 Currently selected footwear: **{st.session_state.footwear_pref}**")
 
     # Navigation
-    col1, col2 = st.columns([1,1])
-    with col1:
-        if st.button("← Back"):
+    back_col, next_col = st.columns([1,1])
+    with back_col:
+        if st.button("← Back", key="back_step1"):
             st.session_state.step = 1
-    with col2:
-        if st.button("Next →"):
-            st.session_state.inputs.update({
-                "activity_label": activity_label,
-                "activity_key": "Low" if "Low" in activity_label else ("Moderate" if "Moderate" in activity_label else "High"),
-                "foot_type": st.session_state.foot_type,
-                "footwear_pref": st.session_state.footwear_pref
-            })
+    with next_col:
+        if st.button("Next →", key="to_step3"):
+            # ensure all inputs are present before leaving
+            st.session_state.inputs["age_group"] = st.session_state.inputs.get("age_group", map_age_index(st.session_state.get("age_i",1)))
+            st.session_state.inputs["gender"] = st.session_state.inputs.get("gender", map_gender_index(st.session_state.get("gender_i",0)))
+            st.session_state.inputs["weight_val"] = st.session_state.inputs.get("weight_val", st.session_state.get("weight_val",68))
+            st.session_state.inputs["weight_group"] = st.session_state.inputs.get("weight_group", map_weight_val(st.session_state.inputs.get("weight_val",68)))
+            st.session_state.inputs["activity_label"] = st.session_state.inputs.get("activity_label", map_activity_index(st.session_state.get("activity_i",1)))
+            st.session_state.inputs["activity_key"] = st.session_state.inputs.get("activity_key", "Moderate")
+            st.session_state.inputs["foot_type"] = st.session_state.inputs.get("foot_type", st.session_state.get("foot_type", "Normal Arch"))
+            st.session_state.inputs["footwear_pref"] = st.session_state.inputs.get("footwear_pref", st.session_state.get("footwear_pref", "Running shoes"))
             st.session_state.step = 3
 
-
-# ---------- STEP 3 ----------
+# ---------------------------
+# STEP 3: Recommendation
+# ---------------------------
 elif st.session_state.step == 3:
     st.header("Step 3 — Recommendation & Biomechanics Summary")
 
-    set_activity_theme = lambda k: None  # no-op if you don't need theme here
-    set_activity_theme(st.session_state.inputs.get("activity_key", "Moderate"))
+    # Get values robustly: prefer inputs dict, fallback to session_state individual keys, fallback defaults
+    def get_val(key, default):
+        return st.session_state.inputs.get(key, st.session_state.get(key, default))
 
-    age_group = st.session_state.inputs.get("age_group", "18–25")
-    gender = st.session_state.inputs.get("gender", "Male")
-    weight_group = st.session_state.inputs.get("weight_group", "50–70 kg")
-    activity_label = st.session_state.inputs.get("activity_label", "Moderate (walking/standing sometimes)")
-    foot_type = st.session_state.inputs.get("foot_type", "Normal Arch")
-    footwear_pref = st.session_state.inputs.get("footwear_pref", "Running shoes")
+    age_group = get_val("age_group", "18–25")
+    gender = get_val("gender", "Male")
+    weight_group = get_val("weight_group", "50–70 kg")
+    activity_label = get_val("activity_label", "Moderate (walking/standing sometimes)")
+    activity_key = get_val("activity_key", "Moderate")
+    foot_type = get_val("foot_type", "Normal Arch")
+    footwear_pref = get_val("footwear_pref", "Running shoes")
 
-    analyze_col1, analyze_col2, analyze_col3 = st.columns([1,1,2])
-    with analyze_col1:
+    # apply theme
+    set_activity_theme(activity_key)
+
+    # analyze / start over
+    col_a1, col_a2, col_a3 = st.columns([1,1,2])
+    with col_a1:
         if st.button("Analyze", key="analyze_btn"):
             st.session_state.analyze_clicked = True
-
-    with analyze_col3:
+    with col_a3:
         if st.button("🔁 Start Over", key="start_over"):
+            # reset everything
             st.session_state.step = 1
             st.session_state.inputs = {}
             st.session_state.foot_type = "Normal Arch"
             st.session_state.footwear_pref = "Running shoes"
             st.session_state.analyze_clicked = False
-            st.experimental_rerun()
 
+    # compute recommendation using robust values
     brand, material, justification = recommend(foot_type, weight_group, activity_label, footwear_pref, age_group, gender)
 
+    # animated gif if clicked
     if st.session_state.analyze_clicked:
         gif_path = os.path.join(IMAGE_DIR, "walking.gif")
         if os.path.exists(gif_path):
             st.markdown(f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>", unsafe_allow_html=True)
+        # speak concise result
         speak_text(f"Recommendation ready. {brand} recommended.")
 
-    # Summary card
+    # summary card
     summary_md = f"""
     <div class="summary-card">
       <h3>🧠 Biomechanics Summary</h3>
       <p class="highlight-box">
-        👤 <b>Age:</b> {age_group} &nbsp; 🚻 <b>Gender:</b> {gender} <br/>
+        👤 <b>Age:</b> {age_group} &nbsp; &nbsp; 🚻 <b>Gender:</b> {gender} <br/>
         ⚖️ <b>Weight:</b> {weight_group} &nbsp; 🏃 <b>Activity:</b> {activity_label} <br/>
         🦶 <b>Foot Type:</b> {foot_type} &nbsp; 👟 <b>Preference:</b> {footwear_pref}
       </p>
@@ -329,7 +379,18 @@ elif st.session_state.step == 3:
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
-        st.experimental_rerun()
+
+    # ---- DEBUG (development only) ----
+    st.markdown("---")
+    st.caption("DEBUG — session_state values (for troubleshooting):")
+    debug_vals = {
+        "step": st.session_state.step,
+        "inputs": st.session_state.inputs,
+        "foot_type": st.session_state.get("foot_type"),
+        "footwear_pref": st.session_state.get("footwear_pref"),
+        "analyze_clicked": st.session_state.analyze_clicked
+    }
+    st.text(debug_vals)
 
 
 
