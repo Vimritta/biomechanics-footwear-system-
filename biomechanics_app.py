@@ -138,7 +138,6 @@ if st.session_state.step == 1:
 
 # ---------------------------
 # Step 2: Foot details & activity
-# ========== STEP 2 ==========
 elif st.session_state.step == 2:
     st.header("Step 2 — Foot & Activity Details")
 
@@ -166,40 +165,68 @@ elif st.session_state.step == 2:
     else:
         activity_key = "High"
 
-    # Foot type dropdown
-    foot_type = st.selectbox(
-        "Select your Foot Type",
-        ["Flat Arch", "Normal Arch", "High Arch"]
-    )
 
-    # Type of footwear dropdown
-    footwear_type = st.selectbox(
-        "Select the Type of Footwear You Prefer",
-        ["Running shoes", "Cross-training shoes", "Casual/fashion sneakers", "Sandals or slippers"]
-    )
+    # Foot type visualization using small icons
+    st.write("👣 Foot Type — click to select")
+    colf1, colf2, colf3 = st.columns(3)
+    foot_choice = None
+    ft_selected = None
+    foot_images = [("flat.png","Flat Arch"), ("normal.png","Normal Arch"), ("high_arch.png","High Arch")]
+    for i, (fname, label) in enumerate(foot_images):
+        img = load_image(fname)
+        if i == 0:
+            with colf1:
+                if img:
+                    if st.button(label):
+                        ft_selected = label
+                    st.image(img, caption=label, width=120)
+                else:
+                    if st.button(label):
+                        ft_selected = label
+        elif i == 1:
+            with colf2:
+                if img:
+                    if st.button(label):
+                        ft_selected = label
+                    st.image(img, caption=label, width=120)
+                else:
+                    if st.button(label):
+                        ft_selected = label
+        else:
+            with colf3:
+                if img:
+                    if st.button(label):
+                        ft_selected = label
+                    st.image(img, caption=label, width=120)
+                else:
+                    if st.button(label):
+                        ft_selected = label
 
-    # Display selected summary
-    st.write(f"👣 **Foot Type:** {foot_type}")
-    st.write(f"🏋️ **Weight Group:** {weight_cat}")
-    st.write(f"🚶 **Activity Level:** {activity_label}")
-    st.write(f"👟 **Preferred Footwear:** {footwear_type}")
+    # If a foot type hasn't just been selected via button, provide a fallback radio
+    if not ft_selected:
+        ft_selected = st.radio("Or choose foot type:", ["Flat Arch", "Normal Arch", "High Arch"])
 
-    # Navigation buttons
-    col1, col2 = st.columns([1, 1])
-    with col1:
+    # Footwear preference
+    footwear_type = st.selectbox("Type of footwear you prefer", ["Running shoes", "Cross-training shoes", "Casual/fashion sneakers", "Sandals or slippers"])
+
+    st.write("")
+    cols = st.columns([1,1,1])
+    with cols[0]:
         if st.button("← Back"):
             prev_step()
-    with col2:
+    with cols[2]:
         if st.button("Next →"):
-            # Save current inputs in session state
-            st.session_state["foot_type"] = foot_type
-            st.session_state["weight_cat"] = weight_cat
-            st.session_state["activity_label"] = activity_label
-            st.session_state["footwear_type"] = footwear_type
-
-            # Move to Step 3 (recommendations)
+            # save intermediate answers
+            st.session_state.temp = {
+                "age_cat": age_cat,
+                "gender": gender,
+                "weight_cat": weight_cat,
+                "activity_label": activity_label,
+                "activity_key": activity_key,
+                "foot_type": ft_selected,
+                "footwear_type": footwear_type
+            }
             next_step()
-
 
 # ---------------------------
 # Step 3: Recommendation & UI output
