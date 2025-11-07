@@ -1,182 +1,167 @@
-# biomech_app_final.py
+# biomechanics_app.py — FootFit Analyzer with Voice Assistant
 import streamlit as st
+import pandas as pd
+import numpy as np
 from PIL import Image
 import os
-import random
 
-# ------------------ APP CONFIG ------------------
 st.set_page_config(page_title="FootFit Analyzer", layout="wide", page_icon="👟")
 
-# ------------------ IMAGE LOADER ------------------
-def load_image(name):
-    path = os.path.join("images", name)
+# --------------------------- Helper Functions ---------------------------
+def load_image(filename):
+    path = os.path.join("images", filename)
     return Image.open(path) if os.path.exists(path) else None
 
-# ------------------ THEME FUNCTIONS ------------------
-def set_background(color):
-    """Set static background color (white for Step 1 and 2)."""
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-color: {color};
-            transition: background-color 0.6s ease;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+def map_activity_index(value):
+    return ["Low (mostly sitting)", "Moderate (walking/standing sometimes)", "High (running or standing often)"][value]
 
-def set_activity_theme(activity_level):
-    """Dynamic background for Step 3 based on activity."""
-    if "Low" in activity_level:
-        color = "#e6f2ff"  # calm blue
-    elif "Moderate" in activity_level:
-        color = "#e8f8ef"  # soft green
-    else:
-        color = "#fff2e0"  # energetic orange
-    set_background(color)
+# --------------------------- Voice Assistant ---------------------------
+def speak_text(text):
+    """Inject JS to speak text via browser speechSynthesis API"""
+    js = f"""
+    <script>
+    var msg = new SpeechSynthesisUtterance("{text}");
+    msg.lang = 'en-US';
+    msg.rate = 1.0;
+    window.speechSynthesis.speak(msg);
+    </script>
+    """
+    st.markdown(js, unsafe_allow_html=True)
 
-# ------------------ HEADER ------------------
-logo = load_image("logo.png")
-col1, col2 = st.columns([1, 8])
-if logo:
-    col1.image(logo, width=120)
-col2.markdown("<h1>👟 FootFit Analyzer — Biomechanics Profiler</h1>", unsafe_allow_html=True)
-st.markdown("---")
+# --------------------------- Custom CSS ---------------------------
+custom_style = """
+<style>
+body, [data-testid="stAppViewContainer"] {
+    background-color: white !important;
+    color: black !important;
+    font-weight: bold !important;
+}
+h1, h2, h3, h4 { color: black !important; font-weight: 800 !important; }
+.step3-text { font-weight: bold !important; }
+</style>
+"""
+st.markdown(custom_style, unsafe_allow_html=True)
 
-# ------------------ SESSION STATE ------------------
-if "step" not in st.session_state:
-    st.session_state.step = 1
+# --------------------------- Session State ---------------------------
+if "step" not in st.session_state: st.session_state.step = 1
+if "inputs" not in st.session_state: st.session_state.inputs = {}
 
-# ------------------ STEP CONTROL ------------------
-def next_step():
-    st.session_state.step += 1
-def prev_step():
-    st.session_state.step -= 1
-
-# ------------------ STEP 1: PERSONAL INFO ------------------
+# --------------------------- STEP 1 ---------------------------
 if st.session_state.step == 1:
-    set_background("white")
+    st.title("👣 Step 1 — Personal Details")
+    speak_text("Welcome to FootFit Analyzer. Let's start with your personal details.")
 
-    st.header("Step 1 — Personal Information")
-    age = st.selectbox("Select your Age Group", ["Under 18", "18–25", "26–35", "36–50", "51–65", "Over 65"])
-    gender = st.radio("Select your Gender", ["Male", "Female"])
+    st.subheader("Select your Age Range")
+    age = st.radio("", ["Under 18", "18–25", "26–35", "36–50", "51–65", "Over 65"], horizontal=True)
 
-    st.markdown("---")
-    col1, col2 = st.columns([1, 1])
+    st.subheader("Select your Gender")
+    gender = st.radio("", ["Male", "Female"], horizontal=True)
+
+    st.subheader("Select your Weight Range")
+    weight = st.radio("", ["Under 50 kg", "50–70 kg", "71–90 kg", "91–110 kg", "Over 110 kg"], horizontal=True)
+
+    col1, col2 = st.columns([1,1])
     with col2:
         if st.button("Next →"):
-            st.session_state.age = age
-            st.session_state.gender = gender
-            next_step()
+            st.session_state.inputs.update({"age": age, "gender": gender, "weight": weight})
+            st.session_state.step = 2
+            st.experimental_rerun()
 
-# ------------------ STEP 2: FOOT DETAILS ------------------
+# --------------------------- STEP 2 ---------------------------
 elif st.session_state.step == 2:
-    set_background("white")
+    st.title("🏃 Step 2 — Foot & Activity Details")
+    speak_text("Now let's check your foot type and activity level.")
 
-    st.header("Step 2 — Biomechanical Details")
-    weight = st.selectbox("Select your Weight Group", ["Under 50 kg", "50–70 kg", "71–90 kg", "Over 90 kg"])
-    activity = st.selectbox("Select your Daily Activity Level",
-                            ["Low (mostly sitting)", "Moderate (walking/standing sometimes)", "High (frequent walking/running)"])
-    foot_type = st.selectbox("Select your Foot Type", ["Flat Arch", "Normal Arch", "High Arch"])
-    footwear_type = st.selectbox("Type of footwear you prefer",
-                                 ["Running shoes", "Cross-training shoes", "Casual/fashion sneakers", "Sandals or slippers"])
+    activity_i = st.slider("Select your daily activity level", 0, 2, 1, step=1)
+    activity_label = map_activity_index(activity_i)
+    st.caption(f"Selected: **{activity_label}**")
 
-    # Foot type image preview
-    st.markdown("### 👣 Foot Type Visualization")
-    col1, col2, col3 = st.columns(3)
-    img_flat = load_image("flat.png")
-    img_normal = load_image("normal.png")
-    img_high = load_image("high_arch.png")
-    if img_flat: col1.image(img_flat, caption="Flat Arch", width=120)
-    if img_normal: col2.image(img_normal, caption="Normal Arch", width=120)
-    if img_high: col3.image(img_high, caption="High Arch", width=120)
+    st.subheader("👣 Foot Type — choose one")
+    foot_options = {"Flat Arch": "flat.png", "Normal Arch": "normal.png", "High Arch": "high_arch.png"}
+    if "foot_type" not in st.session_state: st.session_state.foot_type = "Normal Arch"
 
-    st.markdown("---")
-    col1, col2, col3 = st.columns([1, 1, 1])
+    cols = st.columns(len(foot_options))
+    for (label, img_file), col in zip(foot_options.items(), cols):
+        with col:
+            img = load_image(img_file)
+            if img: st.image(img, caption=label, width=140)
+            selected = st.session_state.foot_type == label
+            if st.button(f"{'✅ ' if selected else ''}{label}", key=f"ft_{label}"):
+                st.session_state.foot_type = label
+    st.write(f"👉 Selected Foot Type: **{st.session_state.foot_type}**")
+
+    st.subheader("👟 Type of Footwear You Prefer")
+    options = ["Running shoes", "Cross-training shoes", "Casual/fashion sneakers", "Sandals or slippers"]
+    if "footwear_pref" not in st.session_state: st.session_state.footwear_pref = "Running shoes"
+
+    st.session_state.footwear_pref = st.radio("", options, horizontal=True, key="footwear_pref")
+    st.write(f"👉 Selected Footwear: **{st.session_state.footwear_pref}**")
+
+    col1, col2 = st.columns([1,1])
     with col1:
-        if st.button("← Back"):
-            prev_step()
-    with col3:
+        if st.button("← Back"): st.session_state.step = 1; st.experimental_rerun()
+    with col2:
         if st.button("Next →"):
-            st.session_state.weight = weight
-            st.session_state.activity = activity
-            st.session_state.foot_type = foot_type
-            st.session_state.footwear_type = footwear_type
-            next_step()
+            st.session_state.inputs.update({
+                "activity_label": activity_label,
+                "foot_type": st.session_state.foot_type,
+                "footwear_pref": st.session_state.footwear_pref
+            })
+            st.session_state.step = 3
+            st.experimental_rerun()
 
-# ------------------ STEP 3: RECOMMENDATION ------------------
+# --------------------------- STEP 3 ---------------------------
 elif st.session_state.step == 3:
-    activity = st.session_state.get("activity", "Moderate (walking/standing sometimes)")
-    set_activity_theme(activity)  # 🎨 Auto color change only here
+    inputs = st.session_state.inputs
+    activity = inputs["activity_label"]
 
-    st.header("Step 3 — Personalized Recommendation")
+    # Dynamic background color logic
+    if "Low" in activity: bg, text = "#D3EAF2", "#084B83"
+    elif "Moderate" in activity: bg, text = "#FFF3CD", "#795548"
+    else: bg, text = "#FDE2E4", "#C21807"
 
-    age = st.session_state.get("age", "")
-    gender = st.session_state.get("gender", "")
-    weight = st.session_state.get("weight", "")
-    foot_type = st.session_state.get("foot_type", "")
-    footwear_type = st.session_state.get("footwear_type", "")
-
-    # --- Recommendation logic ---
-    if foot_type == "Flat Arch":
-        shoe = "Stability Running Shoe"
-        material = "Dual-Density Foam Midsole"
-        justification = "Provides arch support and prevents over-pronation."
-    elif foot_type == "High Arch":
-        shoe = "Cushioned Shoe"
-        material = "Soft Gel or Memory Foam"
-        justification = "Improves shock absorption and heel comfort."
-    else:
-        shoe = "Neutral Cushion Shoe"
-        material = "Breathable Mesh + EVA Foam"
-        justification = "Offers balanced flexibility and comfort."
-
-    if "Casual" in footwear_type:
-        shoe = "Casual Sneaker"
-        material = "Lightweight Textile Upper + Soft Foam Sole"
-        justification = "Comfortable for daily wear with flexible material."
-
-    # --- Biomechanics Summary ---
     st.markdown(f"""
-    <div style='background-color:white; padding:20px; border-radius:15px; box-shadow:0 0 10px rgba(0,0,0,0.1);'>
-    <h3>🧠 Biomechanics Summary</h3>
-    <p>👤 <b>Age:</b> {age} &nbsp;&nbsp; 🚻 <b>Gender:</b> {gender}</p>
-    <p>⚖️ <b>Weight:</b> {weight} &nbsp;&nbsp; 🏃 <b>Activity:</b> {activity}</p>
-    <p>🦶 <b>Foot Type:</b> {foot_type} &nbsp;&nbsp; 👟 <b>Preference:</b> {footwear_type}</p>
-    </div>
+    <style>
+    [data-testid="stAppViewContainer"] {{
+        background-color: {bg} !important;
+        color: {text} !important;
+    }}
+    h1, h2, h3, h4, h5, h6, p, div {{
+        color: {text} !important;
+        font-weight: bold !important;
+    }}
+    </style>
     """, unsafe_allow_html=True)
 
-    # --- Recommendation Output ---
-    st.success(f"👟 **Recommended Footwear:** {shoe}")
-    st.info(f"🧵 **Material:** {material}")
-    st.write(f"💬 *{justification}*")
+    st.title("🧠 Step 3 — Biomechanics Summary & Recommendation")
+    speak_text("Here is your personalized biomechanics summary and footwear recommendation.")
 
-    # --- Virtual Shoe Wall / Animation ---
-    gif = None
-    if "Low" in activity:
-        gif = load_image("sitting.gif")
-    elif "Moderate" in activity:
-        gif = load_image("walking.gif")
-    else:
-        gif = load_image("running.gif")
-    if gif:
-        st.image(gif, caption="Biomechanical Activity", width=250)
+    st.write(f"👤 **Age:** {inputs['age']}   🚻 **Gender:** {inputs['gender']}")
+    st.write(f"⚖️ **Weight:** {inputs['weight']}   🏃 **Activity:** {inputs['activity_label']}")
+    st.write(f"🦶 **Foot Type:** {inputs['foot_type']}   👟 **Preference:** {inputs['footwear_pref']}")
+    st.markdown("---")
 
-    # --- Tip of the Day ---
-    tips = [
-        "Stretch your calves daily to reduce heel strain.",
-        "Replace your shoes every 500–800 km of running.",
-        "Use orthotic insoles if you experience arch pain.",
-        "Let your shoes air-dry after workouts.",
-        "Do simple ankle rotations to strengthen stabilizer muscles."
-    ]
-    st.markdown(f"💡 **Tip of the Day:** *{random.choice(tips)}*")
+    # Recommender
+    recommendation = "Neutral Cushioned Shoes"
+    if "Flat" in inputs["foot_type"]:
+        recommendation = "Stability or Motion Control Shoes for extra arch support"
+    elif "High" in inputs["foot_type"]:
+        recommendation = "Cushioned Shoes with soft midsoles for shock absorption"
+
+    if "Cross" in inputs["footwear_pref"]:
+        recommendation += " — great for varied workouts!"
+    elif "Casual" in inputs["footwear_pref"]:
+        recommendation += " — look stylish with added comfort!"
+    elif "Sandals" in inputs["footwear_pref"]:
+        recommendation += " — choose orthopedic soles for daily wear."
+
+    st.success(f"💡 **Recommended Footwear:** {recommendation}")
+    speak_text(f"Based on your profile, I recommend {recommendation}")
 
     st.markdown("---")
-    if st.button("🔁 Analyze Again"):
-        st.session_state.step = 1
+    if st.button("← Back"):
+        st.session_state.step = 2
+        st.experimental_rerun()
 
 
 
