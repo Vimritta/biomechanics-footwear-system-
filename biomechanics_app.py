@@ -202,8 +202,14 @@ elif st.session_state.step == 2:
     activity_label = map_activity_index(activity_i)
     st.caption(f"Selected: **{activity_label}**")
 
-    # Foot type visualization: images with clickable buttons (highlight selected)
+    # ---------------------------
+    # Foot Type Selection (fixed)
+    # ---------------------------
     st.subheader("👣 Foot Type — click an option")
+
+    if "foot_type" not in st.session_state:
+        st.session_state.foot_type = "Normal Arch"
+
     foot_options = [
         ("flat.png", "Flat Arch"),
         ("normal.png", "Normal Arch"),
@@ -211,40 +217,54 @@ elif st.session_state.step == 2:
     ]
 
     cols = st.columns(3)
-    selected_ft = st.session_state.inputs.get("foot_type", "Normal Arch")
     for i, (fname, label) in enumerate(foot_options):
         with cols[i]:
             img = load_image(fname)
+            selected = (st.session_state.foot_type == label)
             if img:
-                # show selected border if chosen
-                if st.button(label + (" ✅" if label == selected_ft else "")):
-                    selected_ft = label
-                # Render with an additional CSS wrapper for selected
-                if label == selected_ft:
+                if selected:
                     st.markdown(f"<div class='foot-type-selected'>{st.image(img, caption=label, width=140) or ''}</div>", unsafe_allow_html=True)
                 else:
                     st.image(img, caption=label, width=140)
-            else:
-                if st.button(label + (" ✅" if label == selected_ft else "")):
-                    selected_ft = label
-                st.write(label)
 
-    # Footwear preference selectbox (discrete choices)
-    footwear_pref = st.selectbox("Type of footwear you prefer", ["Running shoes", "Cross-training shoes", "Casual/fashion sneakers", "Sandals or slippers"])
+            if st.button(f"{'✅ ' if selected else ''}{label}", key=f"btn_{label}"):
+                st.session_state.foot_type = label
+                st.experimental_rerun()
 
-    back_col, next_col = st.columns([1,1])
+    # ---------------------------
+    # Footwear Preference (fixed)
+    # ---------------------------
+    st.markdown("### Type of footwear you prefer")
+
+    if "footwear_pref" not in st.session_state:
+        st.session_state.footwear_pref = "Running shoes"
+
+    footwear_pref = st.selectbox(
+        "",
+        ["Running shoes", "Cross-training shoes", "Casual/fashion sneakers", "Sandals or slippers"],
+        index=["Running shoes", "Cross-training shoes", "Casual/fashion sneakers", "Sandals or slippers"].index(st.session_state.footwear_pref),
+        key="footwear_pref_box"
+    )
+    st.session_state.footwear_pref = footwear_pref
+
+    # ---------------------------
+    # Navigation Buttons
+    # ---------------------------
+    back_col, next_col = st.columns([1, 1])
     with back_col:
         if st.button("← Back"):
             st.session_state.step = 1
+
     with next_col:
         if st.button("Next →"):
             st.session_state.inputs.update({
                 "activity_label": activity_label,
                 "activity_key": "Low" if "Low" in activity_label else ("Moderate" if "Moderate" in activity_label else "High"),
-                "foot_type": selected_ft,
-                "footwear_pref": footwear_pref
+                "foot_type": st.session_state.foot_type,
+                "footwear_pref": st.session_state.footwear_pref
             })
             st.session_state.step = 3
+
 
 # ---------------------------
 # STEP 3 — Analysis & Recommendation
