@@ -104,18 +104,30 @@ def prev_step():
 
 # ---------------------------
 # Step 1: Personal info
-# ---------------------------
 if st.session_state.step == 1:
     st.header("Step 1 — Personal Info")
-    # Age categories: under 18, 18-25, 26-35, 36-50, 51-65, over 65
-    age_index = st.slider("Age group", 0, 5, 1, format="%d")
-    age_map = ["under 18", "18-25", "26-35", "36-50", "51-65", "over 65"]
-    age_cat = age_map[age_index]
-    # Gender slider-like choice: map 0->Male, 1->Female
-    gender_index = st.slider("Gender (move to choose)", 0, 1, 0, step=1, format="%d")
-    gender_map = ["Male", "Female"]
-    gender = gender_map[gender_index]
+
+    # Age group dropdown (option box)
+    age_cat = st.selectbox(
+        "Select your Age Group",
+        ["Under 18", "18–25", "26–35", "36–50", "51–65", "Over 65"]
+    )
+
+    # Gender dropdown (option box)
+    gender = st.selectbox(
+        "Select your Gender",
+        ["Male", "Female"]
+    )
+
     st.write(f"Selected: **{age_cat}**, **{gender}**")
+
+    # Next button
+    st.write("")
+    coln1, coln2 = st.columns([1,1])
+    with coln1:
+        if st.button("Next →"):
+            next_step()
+
 
     # Next button
     st.write("")
