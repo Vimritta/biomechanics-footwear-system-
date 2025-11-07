@@ -231,179 +231,84 @@ elif st.session_state.step == 2:
 # ---------------------------
 # Step 3: Recommendation & UI output
 # ---------------------------
+# ========== STEP 3 ==========
 elif st.session_state.step == 3:
-    st.header("Step 3 — Recommendation")
-    data = st.session_state.get("temp", {})
-    if not data:
-        st.error("No input data found. Please go back and enter details.")
-    else:
-        age_cat = data["age_cat"]
-        gender = data["gender"]
-        weight_cat = data["weight_cat"]
-        activity_label = data["activity_label"]
-        activity_key = data["activity_key"]
-        foot_type = data["foot_type"]
-        footwear_type = data["footwear_type"]
+    st.header("Step 3 — Footwear & Material Recommendation")
 
-        # Dynamic theme by activity
-        if activity_key == "Low":
-            bg = "#cce7ff"
-        elif activity_key == "Moderate":
-            bg = "#d0f0c0"
-        else:
-            bg = "#ffd6cc"
-        st.markdown(f"""<style>.stApp{{background-color:{bg};}}</style>""", unsafe_allow_html=True)
+    st.markdown("### 🧠 Biomechanical Analysis Results")
 
-        # Show animated silhouette if available
-        sil = load_image("silhouette.gif")
-        if sil:
-            st.image(os.path.join(IMAGE_DIR, "silhouette.gif"), caption="Analyzing gait — visual reference", width=240)
-        else:
-            st.write("_(Animated silhouette not found — add images/silhouette.gif to repo to show animation.)_")
+    # Retrieve stored data safely
+    age_cat = st.session_state.get("age_cat", "18–25")
+    gender = st.session_state.get("gender", "Male")
+    weight_cat = st.session_state.get("weight_cat", "50–70 kg")
+    activity_label = st.session_state.get("activity_label", "Moderate (walking/standing sometimes)")
+    foot_type = st.session_state.get("foot_type", "Normal Arch")
+    footwear_type = st.session_state.get("footwear_type", "Running shoes")
 
-        # Biomechanics logic simplified
-        if foot_type == "Flat Arch":
-            arch_support = "High Arch Support"
-        elif foot_type == "Normal Arch":
-            arch_support = "Moderate Arch Support"
-        else:
-            arch_support = "Extra Cushioning"
+    # ----------- Recommendation Rules -----------
+    footwear_recommendation = ""
+    material_recommendation = ""
+    justification = ""
 
-        # Cushioning by weight category
-        if weight_cat == "Over 90 kg":
-            cushioning = "High Cushioning"
-        elif weight_cat == "71–90 kg":
-            cushioning = "Medium Cushioning"
-        elif weight_cat == "50–70 kg":
-            cushioning = "Medium Cushioning"
-        else:
-            cushioning = "Light Cushioning"
+    # Foot type–based logic
+    if foot_type == "Flat Arch":
+        footwear_recommendation = "Stability Running Shoe"
+        material_recommendation = "Dual-Density Foam Midsole"
+        justification = "Provides arch support and prevents over-pronation."
+    elif foot_type == "Normal Arch":
+        footwear_recommendation = "Neutral Cushioning Shoe"
+        material_recommendation = "Lightweight Mesh and EVA Foam"
+        justification = "Ensures flexibility and balanced shock absorption."
+    else:  # High Arch
+        footwear_recommendation = "High-Cushion Shoe"
+        material_recommendation = "Soft Gel or Memory Foam Insole"
+        justification = "Improves pressure distribution and heel comfort."
 
-        # Shoe type suggestion refinement
-        if activity_key == "High":
-            shoe_suggestion = "Running shoes"
-        elif activity_key == "Moderate":
-            shoe_suggestion = "Cross-training shoes"
-        else:
-            shoe_suggestion = "Casual/fashion sneakers"
+    # Activity & weight modifiers
+    if "High" in activity_label:
+        material_recommendation += " with Breathable Knit Upper"
+        justification += " Ideal for frequent walking or running."
+    elif "Low" in activity_label:
+        material_recommendation += " with Soft Rubber Outsole"
+        justification += " Adds comfort for prolonged sitting or light walking."
 
-        # combine with user's footwear preference
-        # If user's preference differs, show both recommended and preferred
-        final_shoe = footwear_type if footwear_type == shoe_suggestion else f"{shoe_suggestion} (recommended) — you chose: {footwear_type}"
+    if "Over 90" in weight_cat:
+        material_recommendation += " and Reinforced Heel Padding"
+        justification += " Offers additional stability for heavier load bearing."
 
-        # Material recommendation with justification
-        shoe_name, material_bold, justification_italic = get_material_recommendation(foot_type, weight_cat, activity_key, footwear_type)
+    # Gender nuance
+    if gender == "Female":
+        justification += " Designed to fit narrower heels and softer midsoles."
 
-        # Comfort meter
-        comfort_val, comfort_text = compute_comfort_level(cushioning)
+    # ---------- Display Recommendation ----------
+    st.success(f"👟 **Recommended Footwear:** {footwear_recommendation}")
+    st.info(f"🧵 **Suggested Material:** {material_recommendation}")
+    st.write(f"💬 *{justification}*")
 
-        # Styled summary card (HTML)
-        summary_html = f"""
-        <div style="background-color:#ffffff; padding:16px; border-radius:12px; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">
-        <h3>👟 Biomechanics Summary</h3>
-        <p><b>Age:</b> {age_cat} &nbsp; | &nbsp; <b>Gender:</b> {gender}</p>
-        <p><b>Foot Type:</b> {foot_type} &nbsp; | &nbsp; <b>Activity:</b> {activity_label}</p>
-        <p>🦶 <b>Arch Support:</b> {arch_support} &nbsp; • &nbsp; 🧽 <b>Cushioning:</b> {cushioning}</p>
-        <p>🏷️ <b>Recommended Shoe Category:</b> {final_shoe}</p>
-        <p>🔧 <b>Suggested Shoe:</b> {shoe_name}</p>
-        <p>🧵 <b>Material Recommendation:</b> {material_bold} <br><i style="color: #444;">{justification_italic}</i></p>
-        </div>
-        """
-        st.markdown(summary_html, unsafe_allow_html=True)
+    # Show summary card
+    st.markdown("---")
+    st.subheader("Your Selection Summary")
+    st.write(f"👤 **Age Group:** {age_cat}")
+    st.write(f"🚻 **Gender:** {gender}")
+    st.write(f"⚖️ **Weight Group:** {weight_cat}")
+    st.write(f"🏃 **Activity Level:** {activity_label}")
+    st.write(f"🦶 **Foot Type:** {foot_type}")
+    st.write(f"👟 **Footwear Preference:** {footwear_type}")
 
-        # Comfort meter - show progress and text
-        st.subheader("🌡️ Comfort Meter")
-        st.progress(int(comfort_val * 100))
-        st.write(comfort_text)
+    # Tip of the day
+    import random
+    tips = [
+        "Stretch your calves daily to reduce heel strain.",
+        "Replace your shoes every 500–800 km of running.",
+        "Use orthotic insoles if you experience arch pain.",
+        "Let your shoes air-dry after workouts.",
+        "Do simple ankle rotations to strengthen stabilizer muscles."
+    ]
+    st.markdown(f"💡 **Tip of the Day:** *{random.choice(tips)}*")
 
-        # Add result to session history and show Save & Compare buttons
-        result_entry = {
-            "Age": age_cat,
-            "Gender": gender,
-            "Weight": weight_cat,
-            "Activity": activity_label,
-            "Foot Type": foot_type,
-            "Recommended Shoe": shoe_name,
-            "Material": material_bold,
-            "Comfort": comfort_text
-        }
-        st.session_state.results.append(result_entry)
+    # Navigation
+    st.markdown("---")
+    if st.button("🔁 Analyze Again"):
+        st.session_state.step = 1
 
-        # Virtual shoe wall (show images if available)
-        st.subheader("👟 Virtual Shoe Wall")
-        shoe_img_map = {
-            "Running shoes": "shoe_running.png",
-            "Cross-training shoes": "shoe_cross.png",
-            "Casual/fashion sneakers": "shoe_casual.png",
-            "Sandals or slippers": "shoe_sandal.png"
-        }
-        col_a, col_b, col_c, col_d = st.columns(4)
-        for i, (label, fname) in enumerate(shoe_img_map.items()):
-            img = load_image(fname)
-            target_col = [col_a, col_b, col_c, col_d][i]
-            with target_col:
-                st.markdown(f"**{label}**")
-                if img:
-                    st.image(img, width=150)
-                else:
-                    st.write("_image missing_")
-
-        # Tip of the day
-        tips = [
-            "Stretch your calves daily to reduce heel strain.",
-            "Replace running shoes every 500 km for better support.",
-            "High arches may benefit from extra cushioning.",
-            "Flat feet often improve comfort with arch-support inserts."
-        ]
-        st.info("💡 Tip of the Day: " + random.choice(tips))
-
-        # Voice assistant: speak final recommendation
-        if st.button("🔊 Read recommendation aloud"):
-            speak_text(f"Recommended shoe is {shoe_name}. Recommended material: {material_bold}. {justification_italic}")
-
-        # Show Compare and history
-        col1, col2 = st.columns([1,1])
-        with col1:
-            if st.button("← Back to Edit"):
-                prev_step()
-        with col2:
-            if st.button("Show comparison table"):
-                df = pd.DataFrame(st.session_state.results)
-                st.dataframe(df)
-
-        # Optionally export results
-        if st.button("Export results to CSV"):
-            df = pd.DataFrame(st.session_state.results)
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button("Download CSV", data=csv, file_name="footfit_results.csv", mime="text/csv")
-
-# ---------------------------
-# Upload dataset / Bulk analyze (footer)
-# ---------------------------
-st.markdown("---")
-st.subheader("📂 Optional: Upload dataset for batch analysis")
-uploaded = st.file_uploader("Upload CSV or XLSX (columns: AgeGroup, Gender, WeightGroup, FootType, Activity, PreferredFootwear)", type=["csv","xlsx"])
-if uploaded:
-    try:
-        if uploaded.name.endswith(".csv"):
-            df = pd.read_csv(uploaded)
-        else:
-            df = pd.read_excel(uploaded)
-        st.success(f"Loaded {len(df)} rows")
-        st.dataframe(df.head())
-        if st.button("Run batch recommendations"):
-            out = []
-            for _, r in df.iterrows():
-                shoe_name, material_bold, justification = get_material_recommendation(r.get("FootType","Normal Arch"), r.get("WeightGroup","50–70 kg"), r.get("Activity","Moderate"), r.get("PreferredFootwear","Casual/fashion sneakers"))
-                out.append({
-                    "FootType": r.get("FootType",""),
-                    "WeightGroup": r.get("WeightGroup",""),
-                    "Activity": r.get("Activity",""),
-                    "Recommended Shoe": shoe_name,
-                    "Material": material_bold,
-                    "Justification": justification
-                })
-            st.dataframe(pd.DataFrame(out))
-    except Exception as e:
-        st.error("Failed to load dataset: " + str(e))
 
