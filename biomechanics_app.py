@@ -160,72 +160,63 @@ if st.session_state.step == 1:
             st.experimental_rerun()
 
 # ---------- STEP 2 (FIXED) ----------
+# ---------- STEP 2 (FINAL FIXED) ----------
 elif st.session_state.step == 2:
     st.header("Step 2 — Foot & Activity Details")
 
-    # Activity slider
-    activity_i = st.slider("Daily activity level (0=Low,1=Moderate,2=High)", min_value=0, max_value=2, value=1, step=1, key="activity_i")
+    # Activity
+    activity_i = st.slider("Daily activity level (0=Low,1=Moderate,2=High)", 0, 2, 1, step=1)
     activity_label = map_activity_index(activity_i)
     st.caption(f"Selected: **{activity_label}**")
 
-    # Foot type selection area with images + buttons
-    st.subheader("👣 Foot Type — click an option")
-    foot_options = [
-        ("flat.png", "Flat Arch"),
-        ("normal.png", "Normal Arch"),
-        ("high_arch.png", "High Arch")
-    ]
+    # Foot type
+    st.subheader("👣 Foot Type — choose one")
+    foot_options = {
+        "Flat Arch": "flat.png",
+        "Normal Arch": "normal.png",
+        "High Arch": "high_arch.png"
+    }
 
-    cols = st.columns(3)
-    # Ensure a stored default exists
-    if not st.session_state.get("foot_type"):
-        st.session_state.foot_type = st.session_state.inputs.get("foot_type", "Normal Arch")
+    # Initialize stored value if missing
+    if "foot_type" not in st.session_state:
+        st.session_state.foot_type = "Normal Arch"
 
-    for i, (img_file, label) in enumerate(foot_options):
-        with cols[i]:
+    cols = st.columns(len(foot_options))
+    for (label, img_file), col in zip(foot_options.items(), cols):
+        with col:
             img = load_image(img_file)
-            selected = (st.session_state.foot_type == label)
-
-            # show image (highlight if selected)
             if img:
-                if selected:
-                    st.markdown(f"<div class='foot-type-selected'>{st.image(img, caption=label, width=140) or ''}</div>", unsafe_allow_html=True)
-                else:
-                    st.image(img, caption=label, width=140)
-            else:
-                st.write(label)
-
-            # button to set selection (unique key per button)
-            if st.button(label, key=f"ft_btn_{label}"):
+                st.image(img, caption=label, width=140)
+            selected = st.session_state.foot_type == label
+            if st.button(f"{'✅ ' if selected else ''}{label}", key=f"ft_{label}"):
                 st.session_state.foot_type = label
-                # immediately reflect selection visually
-                st.experimental_rerun()
 
-    st.markdown("### Type of footwear you prefer")
+    st.write(f"👉 Currently selected foot type: **{st.session_state.foot_type}**")
 
-    # Footwear preference selectbox persisted via st.session_state.footwear_pref
+    # Footwear preference (selectbox with direct session binding)
+    st.subheader("👟 Type of footwear you prefer")
     options = ["Running shoes", "Cross-training shoes", "Casual/fashion sneakers", "Sandals or slippers"]
-    # initialize if missing
-    if not st.session_state.get("footwear_pref"):
-        st.session_state.footwear_pref = st.session_state.inputs.get("footwear_pref", "Running shoes")
-    # derive index safely
-    try:
-        idx = options.index(st.session_state.footwear_pref)
-    except ValueError:
-        idx = 0
 
-    footwear_pref = st.selectbox("", options, index=idx, key="footwear_select")
-    # keep persistent state copy
-    st.session_state.footwear_pref = footwear_pref
+    if "footwear_pref" not in st.session_state:
+        st.session_state.footwear_pref = "Running shoes"
+
+    st.session_state.footwear_pref = st.selectbox(
+        "Select your preferred footwear type",
+        options,
+        index=options.index(st.session_state.footwear_pref)
+        if st.session_state.footwear_pref in options else 0,
+        key="footwear_pref"
+    )
+
+    st.write(f"👉 Currently selected footwear: **{st.session_state.footwear_pref}**")
 
     # Navigation
-    back_col, next_col = st.columns([1,1])
-    with back_col:
-        if st.button("← Back", key="back_to_step1"):
+    col1, col2 = st.columns([1,1])
+    with col1:
+        if st.button("← Back"):
             st.session_state.step = 1
-            st.experimental_rerun()
-    with next_col:
-        if st.button("Next →", key="to_step3"):
+    with col2:
+        if st.button("Next →"):
             st.session_state.inputs.update({
                 "activity_label": activity_label,
                 "activity_key": "Low" if "Low" in activity_label else ("Moderate" if "Moderate" in activity_label else "High"),
@@ -233,7 +224,7 @@ elif st.session_state.step == 2:
                 "footwear_pref": st.session_state.footwear_pref
             })
             st.session_state.step = 3
-            st.experimental_rerun()
+
 
 # ---------- STEP 3 ----------
 elif st.session_state.step == 3:
