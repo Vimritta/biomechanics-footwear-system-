@@ -6,7 +6,7 @@ import random
 from PIL import Image
 import os
 
-st.set_page_config(page_title="FootFit Analyzer", layout="wide", page_icon="👟", color="red")
+st.set_page_config(page_title="FootFit Analyzer", layout="wide", page_icon="👟")
 
 # ---------------------------
 # Helper utilities
