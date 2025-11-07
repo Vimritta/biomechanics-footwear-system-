@@ -1,4 +1,4 @@
-# app.py — enhanced visual styling (Step 2 option boxes white + Step 3 dark bold text)
+# app.py — enhanced visual styling (white buttons + dropdowns, black text)
 import streamlit as st
 import os
 from PIL import Image
@@ -88,7 +88,7 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 # Themes
 # ---------------------------
 def set_white_theme():
-    """White background + black text + white option boxes"""
+    """White background + black text + white option boxes + white buttons"""
     css = """
     <style>
     .stApp { background-color: white; color: black; }
@@ -106,20 +106,23 @@ def set_white_theme():
         background-color: white !important;
         color: black !important;
     }
+    /* All buttons white with black text */
     .stButton>button {
-        background-color: black !important;
-        color: white !important;
+        background-color: white !important;
+        color: black !important;
+        border: 1px solid #000 !important;
         border-radius: 6px;
+        font-weight: 600 !important;
     }
     .stButton>button:hover {
-        background-color: #333 !important;
+        background-color: #f0f0f0 !important;
     }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 def set_activity_theme(activity_key):
-    """Auto color change based on activity level (used in Step 3) + dark bold font"""
+    """Auto color change based on activity level (used in Step 3) + dark bold font + white buttons"""
     if activity_key == "Low":
         color = "#d8ecff"; accent = "#3478b6"
     elif activity_key == "Moderate":
@@ -143,6 +146,17 @@ def set_activity_theme(activity_key):
     div, p, span, h1, h2, h3, h4, h5, h6 {{
         color: #111 !important;
         font-weight: 600 !important;
+    }}
+    /* White buttons for Step 3 */
+    .stButton>button {{
+        background-color: white !important;
+        color: black !important;
+        border: 1px solid #000 !important;
+        border-radius: 6px;
+        font-weight: 600 !important;
+    }}
+    .stButton>button:hover {{
+        background-color: #f0f0f0 !important;
     }}
     </style>
     """
@@ -223,10 +237,7 @@ elif st.session_state.step == 2:
             img = load_image(imgfile)
             selected = (st.session_state.foot_type == label)
             if img:
-                if selected:
-                    st.markdown(f"<div class='foot-type-selected'>{st.image(img, caption=label, width=140) or ''}</div>", unsafe_allow_html=True)
-                else:
-                    st.image(img, caption=label, width=140)
+                st.image(img, caption=label, width=140)
             if st.button(label, key=f"ftbtn_{label}"):
                 st.session_state.foot_type = label
                 st.session_state.inputs["foot_type"] = label
@@ -354,6 +365,7 @@ elif st.session_state.step == 3:
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
+
 
 
 
