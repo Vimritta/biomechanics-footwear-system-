@@ -1,4 +1,4 @@
-# app.py — updated visual styling for steps 1 & 2 (white background + black text)
+# app.py — enhanced visual styling (Step 2 option boxes white + Step 3 dark bold text)
 import streamlit as st
 import os
 from PIL import Image
@@ -88,19 +88,38 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 # Themes
 # ---------------------------
 def set_white_theme():
-    """White background with black text (used in Step 1 & Step 2)"""
+    """White background + black text + white option boxes"""
     css = """
     <style>
     .stApp { background-color: white; color: black; }
     .stMarkdown, .stText, .stSelectbox, .stRadio, .stButton, label, div, p, h1, h2, h3, h4, h5, h6 {
         color: black !important;
     }
+    select, textarea, input {
+        background-color: white !important;
+        color: black !important;
+        border: 1px solid #ccc !important;
+        border-radius: 6px;
+        padding: 6px;
+    }
+    .stSelectbox div[data-baseweb="select"] > div {
+        background-color: white !important;
+        color: black !important;
+    }
+    .stButton>button {
+        background-color: black !important;
+        color: white !important;
+        border-radius: 6px;
+    }
+    .stButton>button:hover {
+        background-color: #333 !important;
+    }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 def set_activity_theme(activity_key):
-    """Auto color change based on activity level (used in Step 3)"""
+    """Auto color change based on activity level (used in Step 3) + dark bold font"""
     if activity_key == "Low":
         color = "#d8ecff"; accent = "#3478b6"
     elif activity_key == "Moderate":
@@ -109,10 +128,22 @@ def set_activity_theme(activity_key):
         color = "#ffe9d6"; accent = "#e55300"
     css = f"""
     <style>
-    .stApp {{ background: {color}; }}
-    .summary-card {{ background: white; border-radius: 10px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }}
-    .highlight-box {{ border-left: 6px solid {accent}; padding:12px; border-radius:8px; background: rgba(255,255,255,0.6); }}
-    .foot-type-selected {{ border: 3px solid {accent}; border-radius:8px; padding:4px; }}
+    .stApp {{ background: {color}; color: #111 !important; }}
+    .summary-card {{
+        background: white; border-radius: 10px;
+        padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        font-weight: 600; color: #111;
+    }}
+    .highlight-box {{
+        border-left: 6px solid {accent};
+        padding:12px; border-radius:8px;
+        background: rgba(255,255,255,0.6);
+        font-weight: 600; color: #111;
+    }}
+    div, p, span, h1, h2, h3, h4, h5, h6 {{
+        color: #111 !important;
+        font-weight: 600 !important;
+    }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -143,7 +174,7 @@ with col1:
         st.markdown("<h3>👟 FootFit Analyzer</h3>", unsafe_allow_html=True)
 with col2:
     st.markdown("<h1 style='margin-top:8px'>FootFit Analyzer — Biomechanics Footwear Profiler</h1>", unsafe_allow_html=True)
-st.write("A biomechanics-informed recommender that suggests *shoe brand, **materials* and explains why.")
+st.write("A biomechanics-informed recommender that suggests *shoe brand, materials* and explains why.")
 st.markdown("---")
 
 # ---------------------------
@@ -235,7 +266,6 @@ elif st.session_state.step == 3:
     foot_type = get_val("foot_type", "Normal Arch")
     footwear_pref = get_val("footwear_pref", "Running shoes")
 
-    # Auto color theme by activity
     set_activity_theme(activity_key)
 
     col_a1, col_a2, col_a3 = st.columns([1,1,2])
@@ -258,7 +288,6 @@ elif st.session_state.step == 3:
             st.markdown(f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>", unsafe_allow_html=True)
         speak_text(f"Recommendation ready. {brand} recommended.")
 
-    # Bold text only
     summary_md = f"""
     <div class="summary-card">
       <h3>🧠 <b>Biomechanics Summary</b></h3>
@@ -325,6 +354,8 @@ elif st.session_state.step == 3:
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
+
+
 
 
 
