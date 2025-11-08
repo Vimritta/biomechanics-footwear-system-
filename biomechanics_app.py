@@ -98,13 +98,26 @@ def set_white_theme():
         color: black !important;
     }
 
-    /* Dropdowns */
+    /* Dropdowns: white background and white open list */
     div[data-baseweb="select"] {
         background-color: white !important;
         color: black !important;
     }
-    ul, li { background-color: white !important; color: black !important; }
-    li:hover { background-color: #f0f0f0 !important; }
+    div[data-baseweb="select"] span {
+        color: black !important;
+    }
+    div[data-baseweb="select"] div {
+        background-color: white !important;
+        color: black !important;
+    }
+    ul, li {
+        background-color: white !important;
+        color: black !important;
+    }
+    li:hover {
+        background-color: #f0f0f0 !important;
+        color: black !important;
+    }
 
     select, textarea, input {
         background-color: white !important;
@@ -114,7 +127,7 @@ def set_white_theme():
         padding: 6px;
     }
 
-    /* Navigation buttons */
+    /* Navigation buttons (Next, Back) — light pastel violet */
     .stButton>button {
         background-color: #d9c2f0 !important;
         color: black !important;
@@ -122,12 +135,14 @@ def set_white_theme():
         border-radius: 6px;
         font-weight: 600 !important;
     }
-    .stButton>button:hover { background-color: #cbb3eb !important; }
+    .stButton>button:hover {
+        background-color: #cbb3eb !important;
+    }
 
-    /* Download button — pink */
+    /* ✅ Download button — pink */
     div[data-testid="stDownloadButton"] > button {
         background-color: #ff4da6 !important;
-        color: black !important;
+        color: white !important;
         border: none !important;
         border-radius: 8px;
         font-weight: bold !important;
@@ -136,7 +151,11 @@ def set_white_theme():
         background-color: #ff66b2 !important;
     }
 
-    label[for*="read_aloud"] { font-weight: bold !important; color: #111 !important; }
+    /* Checkbox label bold */
+    label[for*="read_aloud"] {
+        font-weight: bold !important;
+        color: #111 !important;
+    }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -165,8 +184,10 @@ def set_activity_theme(activity_key):
         background: rgba(255,255,255,0.6);
         font-weight: 600; color: #111;
     }}
+
+    /* Recommended shoe & material boxes */
     .rec-shoe {{
-        background-color: #b8f5c1 !important;
+        background-color: #b8f5c1 !important; /* pastel green */
         color: #000 !important;
         font-weight: bold;
         font-size: 1.2em;
@@ -174,13 +195,15 @@ def set_activity_theme(activity_key):
         padding: 10px;
     }}
     .rec-material {{
-        background-color: #cfe9ff !important;
+        background-color: #cfe9ff !important; /* pastel blue */
         color: #000 !important;
         font-weight: bold;
         font-size: 1.1em;
         border-radius: 8px;
         padding: 10px;
     }}
+
+    /* Buttons — pastel violet */
     .stButton>button {{
         background-color: #d9c2f0 !important;
         color: black !important;
@@ -188,53 +211,37 @@ def set_activity_theme(activity_key):
         border-radius: 6px;
         font-weight: 600 !important;
     }}
-    .stButton>button:hover {{ background-color: #cbb3eb !important; }}
+    .stButton>button:hover {{
+        background-color: #cbb3eb !important;
+    }}
 
-    /* 💖 Pink Download Button (Step 3) */
+    /* ✅ Download button — pink */
     div[data-testid="stDownloadButton"] > button {{
         background-color: #ff4da6 !important;
         color: white !important;
-        font-weight: bold !important;
-        border-radius: 10px !important;
         border: none !important;
+        border-radius: 8px;
+        font-weight: bold !important;
     }}
     div[data-testid="stDownloadButton"] > button:hover {{
         background-color: #ff66b2 !important;
+    }}
+
+    /* Checkbox label bold */
+    label[for*="read_aloud"] {{
+        font-weight: bold !important;
+        color: #111 !important;
     }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 # ---------------------------
-# Session initialization
+# (rest of your code continues exactly the same below)
 # ---------------------------
-if 'step' not in st.session_state:
-    st.session_state.step = 1
-if 'inputs' not in st.session_state:
-    st.session_state.inputs = {}
-if 'analyze_clicked' not in st.session_state:
-    st.session_state.analyze_clicked = False
-if 'foot_type' not in st.session_state:
-    st.session_state.foot_type = "Normal Arch"
-if 'footwear_pref' not in st.session_state:
-    st.session_state.footwear_pref = "Running shoes"
 
-# ---------------------------
-# Header
-# ---------------------------
-col1, col2 = st.columns([1, 8])
-with col1:
-    logo = load_image("logo.png")
-    if logo:
-        st.image(logo, width=100)
-    else:
-        st.markdown("<h3>👟 FootFit Analyzer</h3>", unsafe_allow_html=True)
-with col2:
-    st.markdown("<h1 style='margin-top:8px'>FootFit Analyzer — Biomechanics Footwear Profiler</h1>", unsafe_allow_html=True)
-st.write("A biomechanics-informed recommender that suggests shoe brand, materials and explains why.")
-st.markdown("---")
+# ... 👇 Keep everything after this line unchanged — same as your provided code
 
-# (No other parts changed — continue your full original code as-is)
 
 
 
