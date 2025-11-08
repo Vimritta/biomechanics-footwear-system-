@@ -139,14 +139,13 @@ def set_white_theme():
         background-color: #cbb3eb !important;
     }
 
-    /* Download button — pink (Step 3) */
+    /* Download button — pink */
     div[data-testid="stDownloadButton"] > button {
         background-color: #ff4da6 !important;
-        color: white !important;
+        color: black !important;
         border: none !important;
         border-radius: 8px;
         font-weight: bold !important;
-        font-size: 16px !important;
     }
     div[data-testid="stDownloadButton"] > button:hover {
         background-color: #ff66b2 !important;
@@ -160,7 +159,6 @@ def set_white_theme():
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
-
 
 def set_activity_theme(activity_key):
     """Activity-based theme (Step 3)"""
@@ -190,17 +188,17 @@ def set_activity_theme(activity_key):
     /* Recommended shoe & material boxes */
     .rec-shoe {{
         background-color: #b8f5c1 !important; /* pastel green */
-        color: #083358 !important;            /* dark navy, not black */
-        font-weight: 800;
-        font-size: 1.4em;
+        color: #000 !important;
+        font-weight: bold;
+        font-size: 1.2em;
         border-radius: 8px;
         padding: 10px;
     }}
     .rec-material {{
         background-color: #cfe9ff !important; /* pastel blue */
-        color: #083358 !important;            /* dark navy, not black */
-        font-weight: 800;
-        font-size: 1.3em;
+        color: #000 !important;
+        font-weight: bold;
+        font-size: 1.1em;
         border-radius: 8px;
         padding: 10px;
     }}
@@ -430,7 +428,8 @@ elif st.session_state.step == 3:
         speak_text(f"I recommend {brand}. Material: {material}. {justification}")
 
     if st.button("← Back", key="back_to_step2"):
-        st
+        st.session_state.step = 2
+
 
 
 
