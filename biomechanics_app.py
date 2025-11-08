@@ -16,11 +16,11 @@ IMAGE_DIR = "images"
 # ---------------------------
 def load_image(name):
     path = os.path.join(IMAGE_DIR, name)
-    try:
-        if os.path.exists(path):
+    if os.path.exists(path):
+        try:
             return Image.open(path)
-    except Exception:
-        pass
+        except Exception:
+            return None
     return None
 
 def speak_text(text):
@@ -62,7 +62,7 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
         material = "*Soft foam midsole + Textile upper*"
         justification = "Justification: Comfortable for daily wear with breathable textile uppers and soft foam for casual cushioning."
     else:
-        material = "*Soft EVA footbed + contoured cork or foam support*"
+        material = "*Soft EVA footbed + Contoured cork or foam support*"
         justification = "Justification: Soft footbed for comfort and a contoured profile to support arches during light activity."
 
     if weight_group == "Over 90 kg":
@@ -88,17 +88,24 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 # Themes
 # ---------------------------
 def set_white_theme():
-    """White theme + white dropdowns + visible opened options + pastel violet buttons"""
     css = """
     <style>
     .stApp { background-color: white; color: black; }
 
-    /* Text colors */
+    /* General text color */
     .stMarkdown, .stText, .stSelectbox, .stRadio, label, div, p, h1, h2, h3, h4, h5, h6 {
         color: black !important;
     }
 
-    /* Dropdowns — white background for closed and opened lists */
+    /* Dropdowns: white background, black text */
+    select, textarea, input {
+        background-color: white !important;
+        color: black !important;
+        border: 1px solid #ccc !important;
+        border-radius: 6px;
+        padding: 6px;
+    }
+
     div[data-baseweb="select"] {
         background-color: white !important;
         color: black !important;
@@ -110,19 +117,8 @@ def set_white_theme():
         background-color: white !important;
         color: black !important;
     }
-    ul, li, [role="option"], div[role="listbox"] {
-        background-color: white !important;
-        color: black !important;
-    }
-    select, textarea, input {
-        background-color: white !important;
-        color: black !important;
-        border: 1px solid #ccc !important;
-        border-radius: 6px;
-        padding: 6px;
-    }
 
-    /* Buttons — light pastel violet */
+    /* Navigation buttons (Next, Back) — pastel violet */
     .stButton>button {
         background-color: #d9c2f0 !important;
         color: black !important;
@@ -138,6 +134,7 @@ def set_white_theme():
     div[data-testid="stDownloadButton"] > button {
         background-color: #ff4da6 !important;
         color: black !important;
+        border: none !important;
         border-radius: 8px;
         font-weight: bold !important;
     }
@@ -145,17 +142,15 @@ def set_white_theme():
         background-color: #ff66b2 !important;
     }
 
-    /* Checkbox label bold */
+    /* Bold checkbox label */
     label[data-testid="stMarkdownContainer"] {
         font-weight: 700 !important;
-        color: #000 !important;
     }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 def set_activity_theme(activity_key):
-    """Activity-based theme with highlighted Step 3 cards"""
     if activity_key == "Low":
         color = "#d8ecff"; accent = "#3478b6"
     elif activity_key == "Moderate":
@@ -166,7 +161,6 @@ def set_activity_theme(activity_key):
     css = f"""
     <style>
     .stApp {{ background: {color}; color: #111 !important; }}
-
     .summary-card {{
         background: white; border-radius: 10px;
         padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
@@ -178,8 +172,18 @@ def set_activity_theme(activity_key):
         background: rgba(255,255,255,0.6);
         font-weight: 600; color: #111;
     }}
-
-    /* Step 3 Buttons */
+    .stAlert[data-baseweb="alert-success"] {{
+        background-color: #c5f8d0 !important;
+        font-weight: 800 !important;
+        font-size: 18px !important;
+        color: #0a3d0a !important;
+    }}
+    .stAlert[data-baseweb="alert-info"] {{
+        background-color: #cce5ff !important;
+        font-weight: 800 !important;
+        font-size: 18px !important;
+        color: #084298 !important;
+    }}
     .stButton>button {{
         background-color: #d9c2f0 !important;
         color: black !important;
@@ -190,33 +194,6 @@ def set_activity_theme(activity_key):
     .stButton>button:hover {{
         background-color: #cbb3eb !important;
     }}
-
-    /* Recommendation highlight boxes */
-    .stAlert[data-baseweb="alert-success"] {{
-        background-color: #b8f5c4 !important;
-        border-left: 6px solid #2e8b57 !important;
-        font-weight: 800 !important;
-        font-size: 18px !important;
-        color: #0a3d0a !important;
-    }}
-    .stAlert[data-baseweb="alert-info"] {{
-        background-color: #cce5ff !important;
-        border-left: 6px solid #3478b6 !important;
-        font-weight: 800 !important;
-        font-size: 18px !important;
-        color: #084298 !important;
-    }}
-
-    /* Tip of the Day — pastel yellow */
-    div[data-testid="stMarkdownContainer"] p:has(> em), .tip-card {{
-        background-color: #fff8cc !important;
-        border-radius: 8px;
-        padding: 10px;
-        font-weight: 600;
-        color: #6b5900 !important;
-    }}
-
-    /* Bold checkbox label */
     label[data-testid="stMarkdownContainer"] {{
         font-weight: 700 !important;
         color: #000 !important;
@@ -228,16 +205,15 @@ def set_activity_theme(activity_key):
 # ---------------------------
 # Session initialization
 # ---------------------------
-if 'step' not in st.session_state:
-    st.session_state.step = 1
-if 'inputs' not in st.session_state:
-    st.session_state.inputs = {}
-if 'analyze_clicked' not in st.session_state:
-    st.session_state.analyze_clicked = False
-if 'foot_type' not in st.session_state:
-    st.session_state.foot_type = "Normal Arch"
-if 'footwear_pref' not in st.session_state:
-    st.session_state.footwear_pref = "Running shoes"
+for key, val in {
+    "step": 1,
+    "inputs": {},
+    "analyze_clicked": False,
+    "foot_type": "Normal Arch",
+    "footwear_pref": "Running shoes",
+}.items():
+    if key not in st.session_state:
+        st.session_state[key] = val
 
 # ---------------------------
 # Header
@@ -251,7 +227,7 @@ with col1:
         st.markdown("<h3>👟 FootFit Analyzer</h3>", unsafe_allow_html=True)
 with col2:
     st.markdown("<h1 style='margin-top:8px'>FootFit Analyzer — Biomechanics Footwear Profiler</h1>", unsafe_allow_html=True)
-st.write("A biomechanics-informed recommender that suggests *shoe brand, materials* and explains why.")
+st.write("A biomechanics-informed recommender that suggests *shoe brand, materials,* and explains why.")
 st.markdown("---")
 
 # ---------------------------
@@ -265,7 +241,7 @@ if st.session_state.step == 1:
     gender_label = st.selectbox("Select Gender", ["Male", "Female"], index=0)
     weight_label = st.selectbox("Select Weight Category", ["Under 50 kg", "50–70 kg", "71–90 kg", "Over 90 kg"], index=1)
 
-    next_col1, next_col2 = st.columns([1,1])
+    next_col1, next_col2 = st.columns(2)
     with next_col2:
         if st.button("Next →", key="to_step2"):
             st.session_state.inputs.update({
@@ -285,7 +261,7 @@ elif st.session_state.step == 2:
     activity_label = st.selectbox(
         "Select your Daily Activity Level",
         ["Low (mostly sitting)", "Moderate (walking/standing sometimes)", "High (frequent walking/running)"],
-        index=1
+        index=1,
     )
     st.session_state.inputs["activity_label"] = activity_label
     st.session_state.inputs["activity_key"] = (
@@ -293,8 +269,8 @@ elif st.session_state.step == 2:
     )
 
     st.subheader("👣 Foot Type — choose one")
-    foot_options = [("Flat Arch","flat.png"), ("Normal Arch","normal.png"), ("High Arch","high_arch.png")]
-    cols = st.columns(len(foot_options))
+    foot_options = [("Flat Arch", "flat.png"), ("Normal Arch", "normal.png"), ("High Arch", "high_arch.png")]
+    cols = st.columns(3)
     for (label, imgfile), col in zip(foot_options, cols):
         with col:
             img = load_image(imgfile)
@@ -314,7 +290,7 @@ elif st.session_state.step == 2:
 
     st.write(f"👉 Currently selected footwear: *{st.session_state.footwear_pref}*")
 
-    back_col, next_col = st.columns([1,1])
+    back_col, next_col = st.columns(2)
     with back_col:
         if st.button("← Back", key="back_step1"):
             st.session_state.step = 1
@@ -341,17 +317,14 @@ elif st.session_state.step == 3:
 
     set_activity_theme(activity_key)
 
-    col_a1, col_a2, col_a3 = st.columns([1,1,2])
+    col_a1, col_a2, col_a3 = st.columns([1, 1, 2])
     with col_a1:
         if st.button("Analyze", key="analyze_btn"):
             st.session_state.analyze_clicked = True
     with col_a3:
         if st.button("🔁 Start Over", key="start_over"):
-            st.session_state.step = 1
-            st.session_state.inputs = {}
-            st.session_state.foot_type = "Normal Arch"
-            st.session_state.footwear_pref = "Running shoes"
-            st.session_state.analyze_clicked = False
+            for k in ["step", "inputs", "foot_type", "footwear_pref", "analyze_clicked"]:
+                st.session_state[k] = {"step": 1, "inputs": {}, "foot_type": "Normal Arch", "footwear_pref": "Running shoes", "analyze_clicked": False}[k]
 
     brand, material, justification = recommend(foot_type, weight_group, activity_label, footwear_pref, age_group, gender)
 
@@ -374,7 +347,7 @@ elif st.session_state.step == 3:
     st.markdown(summary_md, unsafe_allow_html=True)
     st.markdown("---")
 
-    rec_col1, rec_col2 = st.columns([2,1])
+    rec_col1, rec_col2 = st.columns([2, 1])
     with rec_col1:
         st.success(f"👟 *Recommended Shoe:* {brand}")
         st.info(f"🧵 *Material:* {material}")
@@ -385,9 +358,9 @@ elif st.session_state.step == 3:
             "Replace running shoes every 500–800 km.",
             "Use orthotic insoles when experiencing arch pain.",
             "Air-dry shoes after workouts to prevent odor and damage.",
-            "Perform ankle rotations to strengthen stabilizers."
+            "Perform ankle rotations to strengthen stabilizers.",
         ]
-        st.markdown(f"<div class='tip-card'>💡 <b>Tip of the Day:</b> {random.choice(tips)}</div>", unsafe_allow_html=True)
+        st.markdown(f"💡 *Tip of the Day:* {random.choice(tips)}")
 
         summary_text = textwrap.dedent(f"""
         FootFit Analyzer - Recommendation
@@ -411,7 +384,7 @@ elif st.session_state.step == 3:
             "Running shoes": ["running1.png", "running2.png"],
             "Cross-training shoes": ["cross1.png", "cross2.png"],
             "Casual/fashion sneakers": ["casual1.png", "casual2.png"],
-            "Sandals or slippers": ["sandal1.png", "sandal2.png"]
+            "Sandals or slippers": ["sandal1.png", "sandal2.png"],
         }
         imgs = sample_map.get(footwear_pref, [])
         html_images = "<div style='display:flex; flex-wrap:wrap;'>"
@@ -423,6 +396,10 @@ elif st.session_state.step == 3:
         st.markdown(html_images, unsafe_allow_html=True)
 
     if st.checkbox("🔊 Read recommendation aloud", key="read_aloud"):
+        speak_text(f"I recommend {brand}. Material: {material}. {justification}")
+
+    if st.button("← Back", key="back_to_step2"):
+        st.session_state.step = 2
 
 
 
