@@ -88,25 +88,17 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 # Themes
 # ---------------------------
 def set_white_theme():
-    """White theme + white dropdowns + light pastel violet navigation buttons"""
+    """White theme + white dropdowns + visible opened options + pastel violet buttons"""
     css = """
     <style>
     .stApp { background-color: white; color: black; }
 
-    /* General text color */
+    /* Text colors */
     .stMarkdown, .stText, .stSelectbox, .stRadio, label, div, p, h1, h2, h3, h4, h5, h6 {
         color: black !important;
     }
 
-    /* Dropdowns: white background, black text */
-    select, textarea, input {
-        background-color: white !important;
-        color: black !important;
-        border: 1px solid #ccc !important;
-        border-radius: 6px;
-        padding: 6px;
-    }
-
+    /* Dropdowns — white background for closed and opened lists */
     div[data-baseweb="select"] {
         background-color: white !important;
         color: black !important;
@@ -118,8 +110,19 @@ def set_white_theme():
         background-color: white !important;
         color: black !important;
     }
+    ul, li, [role="option"], div[role="listbox"] {
+        background-color: white !important;
+        color: black !important;
+    }
+    select, textarea, input {
+        background-color: white !important;
+        color: black !important;
+        border: 1px solid #ccc !important;
+        border-radius: 6px;
+        padding: 6px;
+    }
 
-    /* Navigation buttons (Next, Back) — light pastel violet */
+    /* Buttons — light pastel violet */
     .stButton>button {
         background-color: #d9c2f0 !important;
         color: black !important;
@@ -135,19 +138,24 @@ def set_white_theme():
     div[data-testid="stDownloadButton"] > button {
         background-color: #ff4da6 !important;
         color: black !important;
-        border: none !important;
         border-radius: 8px;
         font-weight: bold !important;
     }
     div[data-testid="stDownloadButton"] > button:hover {
         background-color: #ff66b2 !important;
     }
+
+    /* Checkbox label bold */
+    label[data-testid="stMarkdownContainer"] {
+        font-weight: 700 !important;
+        color: #000 !important;
+    }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 def set_activity_theme(activity_key):
-    """Activity-based theme (Step 3)"""
+    """Activity-based theme with highlighted Step 3 cards"""
     if activity_key == "Low":
         color = "#d8ecff"; accent = "#3478b6"
     elif activity_key == "Moderate":
@@ -171,7 +179,7 @@ def set_activity_theme(activity_key):
         font-weight: 600; color: #111;
     }}
 
-    /* Step 3 Buttons — pastel violet Back & Next */
+    /* Step 3 Buttons */
     .stButton>button {{
         background-color: #d9c2f0 !important;
         color: black !important;
@@ -183,16 +191,35 @@ def set_activity_theme(activity_key):
         background-color: #cbb3eb !important;
     }}
 
-    /* Download button remains pink */
-    div[data-testid="stDownloadButton"] > button {{
-        background-color: #ff4da6 !important;
-        color: black !important;
-        border: none !important;
-        border-radius: 8px;
-        font-weight: bold !important;
+    /* Recommendation highlight boxes */
+    .stAlert[data-baseweb="alert-success"] {{
+        background-color: #b8f5c4 !important;
+        border-left: 6px solid #2e8b57 !important;
+        font-weight: 800 !important;
+        font-size: 18px !important;
+        color: #0a3d0a !important;
     }}
-    div[data-testid="stDownloadButton"] > button:hover {{
-        background-color: #ff66b2 !important;
+    .stAlert[data-baseweb="alert-info"] {{
+        background-color: #cce5ff !important;
+        border-left: 6px solid #3478b6 !important;
+        font-weight: 800 !important;
+        font-size: 18px !important;
+        color: #084298 !important;
+    }}
+
+    /* Tip of the Day — pastel yellow */
+    div[data-testid="stMarkdownContainer"] p:has(> em), .tip-card {{
+        background-color: #fff8cc !important;
+        border-radius: 8px;
+        padding: 10px;
+        font-weight: 600;
+        color: #6b5900 !important;
+    }}
+
+    /* Bold checkbox label */
+    label[data-testid="stMarkdownContainer"] {{
+        font-weight: 700 !important;
+        color: #000 !important;
     }}
     </style>
     """
@@ -271,7 +298,6 @@ elif st.session_state.step == 2:
     for (label, imgfile), col in zip(foot_options, cols):
         with col:
             img = load_image(imgfile)
-            selected = (st.session_state.foot_type == label)
             if img:
                 st.image(img, caption=label, width=140)
             if st.button(label, key=f"ftbtn_{label}"):
@@ -361,7 +387,7 @@ elif st.session_state.step == 3:
             "Air-dry shoes after workouts to prevent odor and damage.",
             "Perform ankle rotations to strengthen stabilizers."
         ]
-        st.markdown(f"💡 *Tip of the Day:* {random.choice(tips)}")
+        st.markdown(f"<div class='tip-card'>💡 <b>Tip of the Day:</b> {random.choice(tips)}</div>", unsafe_allow_html=True)
 
         summary_text = textwrap.dedent(f"""
         FootFit Analyzer - Recommendation
@@ -397,11 +423,6 @@ elif st.session_state.step == 3:
         st.markdown(html_images, unsafe_allow_html=True)
 
     if st.checkbox("🔊 Read recommendation aloud", key="read_aloud"):
-        speak_text(f"I recommend {brand}. Material: {material}. {justification}")
-
-    if st.button("← Back", key="back_to_step2"):
-        st.session_state.step = 2
-
 
 
 
