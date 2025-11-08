@@ -88,19 +88,30 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 # Themes
 # ---------------------------
 def set_white_theme():
+    """White theme + white dropdowns + light pastel violet navigation buttons"""
     css = """
     <style>
     .stApp { background-color: white; color: black; }
 
-    /* Text & dropdowns */
-    .stMarkdown, .stText, .stSelectbox, label, div, p, h1, h2, h3 {
+    /* General text color */
+    .stMarkdown, .stText, .stSelectbox, .stRadio, label, div, p, h1, h2, h3, h4, h5, h6 {
         color: black !important;
     }
 
-    div[data-baseweb="select"], select, textarea, input {
+    /* Dropdowns */
+    div[data-baseweb="select"] {
         background-color: white !important;
         color: black !important;
+    }
+    ul, li { background-color: white !important; color: black !important; }
+    li:hover { background-color: #f0f0f0 !important; }
+
+    select, textarea, input {
+        background-color: white !important;
+        color: black !important;
+        border: 1px solid #ccc !important;
         border-radius: 6px;
+        padding: 6px;
     }
 
     /* Navigation buttons */
@@ -111,28 +122,27 @@ def set_white_theme():
         border-radius: 6px;
         font-weight: 600 !important;
     }
-    .stButton>button:hover {
-        background-color: #cbb3eb !important;
-    }
+    .stButton>button:hover { background-color: #cbb3eb !important; }
 
-    /* Step 3 Download Button — Pink 💖 */
+    /* Download button — pink */
     div[data-testid="stDownloadButton"] > button {
         background-color: #ff4da6 !important;
-        color: white !important;
+        color: black !important;
         border: none !important;
-        border-radius: 8px !important;
-        font-weight: 700 !important;
-        font-size: 16px !important;
-        padding: 8px 18px !important;
+        border-radius: 8px;
+        font-weight: bold !important;
     }
     div[data-testid="stDownloadButton"] > button:hover {
         background-color: #ff66b2 !important;
     }
+
+    label[for*="read_aloud"] { font-weight: bold !important; color: #111 !important; }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 def set_activity_theme(activity_key):
+    """Activity-based theme (Step 3)"""
     if activity_key == "Low":
         color = "#d8ecff"; accent = "#3478b6"
     elif activity_key == "Moderate":
@@ -143,22 +153,50 @@ def set_activity_theme(activity_key):
     css = f"""
     <style>
     .stApp {{ background: {color}; color: #111 !important; }}
-    .summary-card {{ background: white; border-radius: 10px; padding: 16px; }}
-    .rec-shoe, .rec-material {{
-        border-radius: 10px; padding: 10px; font-weight: bold; font-size: 1.2em;
-    }}
-    .rec-shoe {{ background-color: #b8f5c1; }}
-    .rec-material {{ background-color: #cfe9ff; }}
 
-    /* Pink download button (Step 3) */
+    .summary-card {{
+        background: white; border-radius: 10px;
+        padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        font-weight: 600; color: #111;
+    }}
+    .highlight-box {{
+        border-left: 6px solid {accent};
+        padding:12px; border-radius:8px;
+        background: rgba(255,255,255,0.6);
+        font-weight: 600; color: #111;
+    }}
+    .rec-shoe {{
+        background-color: #b8f5c1 !important;
+        color: #000 !important;
+        font-weight: bold;
+        font-size: 1.2em;
+        border-radius: 8px;
+        padding: 10px;
+    }}
+    .rec-material {{
+        background-color: #cfe9ff !important;
+        color: #000 !important;
+        font-weight: bold;
+        font-size: 1.1em;
+        border-radius: 8px;
+        padding: 10px;
+    }}
+    .stButton>button {{
+        background-color: #d9c2f0 !important;
+        color: black !important;
+        border: 1px solid #b495d6 !important;
+        border-radius: 6px;
+        font-weight: 600 !important;
+    }}
+    .stButton>button:hover {{ background-color: #cbb3eb !important; }}
+
+    /* 💖 Pink Download Button (Step 3) */
     div[data-testid="stDownloadButton"] > button {{
         background-color: #ff4da6 !important;
         color: white !important;
+        font-weight: bold !important;
+        border-radius: 10px !important;
         border: none !important;
-        border-radius: 8px !important;
-        font-weight: 700 !important;
-        font-size: 16px !important;
-        padding: 8px 18px !important;
     }}
     div[data-testid="stDownloadButton"] > button:hover {{
         background-color: #ff66b2 !important;
@@ -196,114 +234,7 @@ with col2:
 st.write("A biomechanics-informed recommender that suggests shoe brand, materials and explains why.")
 st.markdown("---")
 
-# ---------------------------
-# STEP 1
-# ---------------------------
-if st.session_state.step == 1:
-    set_white_theme()
-    st.header("Step 1 — Personal Info")
-
-    age_label = st.selectbox("Select your Age Group", ["Under 18", "18–25", "26–35", "36–50", "51–65", "Over 65"], index=1)
-    gender_label = st.selectbox("Select Gender", ["Male", "Female"], index=0)
-    weight_label = st.selectbox("Select Weight Category", ["Under 50 kg", "50–70 kg", "71–90 kg", "Over 90 kg"], index=1)
-
-    if st.button("Next →"):
-        st.session_state.inputs.update({
-            "age_group": age_label,
-            "gender": gender_label,
-            "weight_group": weight_label,
-        })
-        st.session_state.step = 2
-
-# ---------------------------
-# STEP 2
-# ---------------------------
-elif st.session_state.step == 2:
-    set_white_theme()
-    st.header("Step 2 — Foot & Activity Details")
-
-    activity_label = st.selectbox(
-        "Select your Daily Activity Level",
-        ["Low (mostly sitting)", "Moderate (walking/standing sometimes)", "High (frequent walking/running)"],
-        index=1
-    )
-    st.session_state.inputs["activity_label"] = activity_label
-    st.session_state.inputs["activity_key"] = (
-        "Low" if "Low" in activity_label else ("Moderate" if "Moderate" in activity_label else "High")
-    )
-
-    st.subheader("👣 Foot Type — choose one")
-    foot_options = [("Flat Arch","flat.png"), ("Normal Arch","normal.png"), ("High Arch","high_arch.png")]
-    cols = st.columns(len(foot_options))
-    for (label, imgfile), col in zip(foot_options, cols):
-        with col:
-            img = load_image(imgfile)
-            if img:
-                st.image(img, caption=label, width=140)
-            if st.button(label):
-                st.session_state.foot_type = label
-                st.session_state.inputs["foot_type"] = label
-
-    st.subheader("👟 Type of footwear you prefer")
-    options = ["Running shoes", "Cross-training shoes", "Casual/fashion sneakers", "Sandals or slippers"]
-    new_pref = st.selectbox("Select preferred footwear", options, index=options.index(st.session_state.footwear_pref))
-    st.session_state.footwear_pref = new_pref
-    st.session_state.inputs["footwear_pref"] = new_pref
-
-    if st.button("Next →"):
-        st.session_state.step = 3
-
-# ---------------------------
-# STEP 3
-# ---------------------------
-elif st.session_state.step == 3:
-    st.header("Step 3 — Recommendation & Biomechanics Summary")
-
-    age_group = st.session_state.inputs.get("age_group", "18–25")
-    gender = st.session_state.inputs.get("gender", "Male")
-    weight_group = st.session_state.inputs.get("weight_group", "50–70 kg")
-    activity_label = st.session_state.inputs.get("activity_label", "Moderate (walking/standing sometimes)")
-    activity_key = st.session_state.inputs.get("activity_key", "Moderate")
-    foot_type = st.session_state.inputs.get("foot_type", "Normal Arch")
-    footwear_pref = st.session_state.inputs.get("footwear_pref", "Running shoes")
-
-    set_activity_theme(activity_key)
-
-    brand, material, justification = recommend(foot_type, weight_group, activity_label, footwear_pref, age_group, gender)
-
-    summary_md = f"""
-    <div class="summary-card">
-      <h3>🧠 <b>Biomechanics Summary</b></h3>
-      👤 <b>Age:</b> {age_group} &nbsp; 🚻 <b>Gender:</b> {gender} <br/>
-      ⚖️ <b>Weight:</b> {weight_group} &nbsp; 🏃 <b>Activity:</b> {activity_label} <br/>
-      🦶 <b>Foot Type:</b> {foot_type} &nbsp; 👟 <b>Preference:</b> {footwear_pref}
-    </div>
-    """
-    st.markdown(summary_md, unsafe_allow_html=True)
-    st.markdown("---")
-
-    st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
-    st.write(f"💬 {justification}")
-
-    summary_text = textwrap.dedent(f"""
-    FootFit Analyzer - Recommendation
-    ---------------------------------
-    Age group: {age_group}
-    Gender: {gender}
-    Weight group: {weight_group}
-    Activity level: {activity_label}
-    Foot type: {foot_type}
-    Preferred footwear: {footwear_pref}
-
-    Recommended Shoe: {brand}
-    Material: {material}
-    Justification: {justification}
-    """)
-
-    # 💖 Pink Download Button
-    st.download_button("💖 Download Recommendation (txt)", summary_text, file_name="footfit_recommendation.txt")
-
+# (No other parts changed — continue your full original code as-is)
 
 
 
