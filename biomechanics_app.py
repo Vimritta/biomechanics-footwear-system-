@@ -1,4 +1,3 @@
-
 # app.py — FootFit Analyzer (light pastel violet navigation + white dropdowns + pastel rec boxes)
 import streamlit as st
 import os
@@ -202,6 +201,18 @@ def set_activity_theme(activity_key):
         font-size: 1.1em;
         border-radius: 8px;
         padding: 10px;
+    }}
+
+    /* Pink download button for Step 3 */
+    div[data-testid="stDownloadButton"] > button {{
+        background-color: #ff4da6 !important;
+        color: black !important;
+        border: none !important;
+        border-radius: 8px;
+        font-weight: bold !important;
+    }}
+    div[data-testid="stDownloadButton"] > button:hover {{
+        background-color: #ff66b2 !important;
     }}
 
     /* Buttons — pastel violet */
@@ -421,15 +432,7 @@ elif st.session_state.step == 3:
             if os.path.exists(p):
                 html_images += f"<img src='{p}' width='110' style='margin:6px; border-radius:8px;'/>"
         html_images += "</div>"
-        st.markdown(html_images, unsafe_allow_html=True)
-
-    st.checkbox("🔊 **Read recommendation aloud**", key="read_aloud")
-
-    if st.session_state.get("read_aloud", False):
-        speak_text(f"I recommend {brand}. Material: {material}. {justification}")
-
-    if st.button("← Back", key="back_to_step2"):
-        st.session_state.step = 2
+        st.markdown(html_images, unsafe_allow
 
 
 
