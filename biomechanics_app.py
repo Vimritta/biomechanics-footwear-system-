@@ -5,8 +5,6 @@ from PIL import Image
 import random
 import textwrap
 import base64  # added for pink download button
-import json
-import html as html_mod
 
 # ---------------------------
 # Config
@@ -27,29 +25,74 @@ def load_image(name):
     return None
 
 def speak_text(text):
-    """
-    Safely injects JS to speak the provided text.
-    Uses json.dumps to build a safe JS string literal.
-    Note: Browsers typically require an explicit user gesture to allow audio playback.
-    """
-    safe_js_string = json.dumps(text)
     html = f"""
     <script>
-    (function() {{
-        try {{
-            const msg = new SpeechSynthesisUtterance({safe_js_string});
-            msg.rate = 1.0;
-            // cancel any previous speech
-            try {{ window.speechSynthesis.cancel(); }} catch(e) {{ }}
-            window.speechSynthesis.speak(msg);
-        }} catch(e) {{
-            console.log("Speech error:", e);
-        }}
-    }})();
+    const msg = new SpeechSynthesisUtterance({repr…
+[11:16 PM, 11/10/2025] Vimritta: # app.py — FootFit Analyzer (light pastel violet navigation + white dropdowns + pastel rec boxes)
+import streamlit as st
+import os
+from PIL import Image
+import random
+import textwrap
+import base64  # added for pink download button
+
+# ---------------------------
+# Config
+# ---------------------------
+st.set_page_config(page_title="FootFit Analyzer", layout="wide", page_icon="👟")
+IMAGE_DIR = "images"
+
+# ---------------------------
+# Helpers
+# ---------------------------
+def load_image(name):
+    path = os.path.join(IMAGE_DIR, name)
+    try:
+        if os.path.exists(path):
+            return Image.open(path)
+    except Exception:
+        pass
+    return None
+
+def speak_text(text):
+    html = f"""
+    <script>
+    const msg = new SpeechSynthesisUtterance({repr…
+[11:17 PM, 11/10/2025] Vimritta: # app.py — FootFit Analyzer (light pastel violet navigation + white dropdowns + pastel rec boxes)
+import streamlit as st
+import os
+from PIL import Image
+import random
+import textwrap
+import base64  # added for pink download button
+
+# ---------------------------
+# Config
+# ---------------------------
+st.set_page_config(page_title="FootFit Analyzer", layout="wide", page_icon="👟")
+IMAGE_DIR = "images"
+
+# ---------------------------
+# Helpers
+# ---------------------------
+def load_image(name):
+    path = os.path.join(IMAGE_DIR, name)
+    try:
+        if os.path.exists(path):
+            return Image.open(path)
+    except Exception:
+        pass
+    return None
+
+def speak_text(text):
+    html = f"""
+    <script>
+    const msg = new SpeechSynthesisUtterance({repr(text)});
+    msg.rate = 1.0;
+    window.speechSynthesis.speak(msg);
     </script>
     """
-    # small height so Streamlit won't reserve a lot of space
-    st.components.v1.html(html, height=10)
+    st.components.v1.html(html, height=0)
 
 # ---------------------------
 # Recommender logic
@@ -66,22 +109,22 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
     if footwear_pref == "Running shoes":
         if foot_type == "Flat Arch":
             material = "Dual-density EVA midsole + Arch-stability foam"
-            justification = "Dual-density EVA supports the medial arch and prevents over-pronation while cushioning repeated impact."
+            justification = "Justification: Dual-density EVA supports the medial arch and prevents over-pronation while cushioning repeated impact."
         elif foot_type == "High Arch":
             material = "EVA midsole + Responsive gel insert"
-            justification = "Additional shock absorption and a gel insert disperse high-pressure points common with high arches."
+            justification = "Justification: Additional shock absorption and a gel insert disperse high-pressure points common with high arches."
         else:
             material = "Lightweight mesh upper + Balanced foam midsole"
-            justification = "Breathable upper and balanced cushioning suit neutral-footed runners."
+            justification = "Justification: Breathable upper and balanced cushioning suit neutral-footed runners."
     elif footwear_pref == "Cross-training shoes":
         material = "Dense EVA + Reinforced lateral upper + TPU heel counter"
-        justification = "Dense EVA and reinforced upper provide lateral stability for multi-directional movements."
+        justification = "Justification: Dense EVA and reinforced upper provide lateral stability for multi-directional movements."
     elif footwear_pref == "Casual/fashion sneakers":
         material = "Soft foam midsole + Textile upper"
-        justification = "Comfortable for daily wear with breathable textile uppers and soft foam for casual cushioning."
+        justification = "Justification: Comfortable for daily wear with breathable textile uppers and soft foam for casual cushioning."
     else:
         material = "Soft EVA footbed + contoured cork or foam support"
-        justification = "Soft footbed for comfort and a contoured profile to support arches during light activity."
+        justification = "Justification: Soft footbed for comfort and a contoured profile to support arches during light activity."
 
     if weight_group == "Over 90 kg":
         material = material.replace("EVA", "Thick EVA").replace("Dense EVA", "High-density EVA").replace("soft foam", "high-density foam")
@@ -89,16 +132,10 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 
     if "High" in activity:
         material += " + Breathable knit upper"
-        if justification.endswith("."):
-            justification = justification[:-1] + " Ideal for frequent activity."
-        else:
-            justification += " Ideal for frequent activity."
+        justification = justification[:-1] + " Ideal for frequent activity.*"
     elif "Low" in activity:
         material += " + Soft rubber outsole for comfort"
-        if justification.endswith("."):
-            justification = justification[:-1] + " Better for low-activity comfort."
-        else:
-            justification += " Better for low-activity comfort."
+        justification = justification[:-1] + " Better for low-activity comfort.*"
 
     if gender == "Female":
         justification = "Designed for narrower heels and a more contoured fit. " + justification
@@ -251,9 +288,6 @@ if 'foot_type' not in st.session_state:
     st.session_state.foot_type = "Normal Arch"
 if 'footwear_pref' not in st.session_state:
     st.session_state.footwear_pref = "Running shoes"
-# flag to avoid repeated speak on reruns if needed
-if 'last_spoken_hash' not in st.session_state:
-    st.session_state.last_spoken_hash = None
 
 # ---------------------------
 # Header
@@ -359,24 +393,66 @@ elif st.session_state.step == 3:
     set_activity_theme(activity_key)
 
     col_a1, col_a2, col_a3 = st.columns([1,1,2])
-   with rec_col1:
-    # Shoe Recommendation
-    st.markdown(f"<div style='background-color:#b2fab4;padding:12px;border-radius:10px;font-weight:600;'>👟 Recommended Shoe: <b>{brand}</b></div>", unsafe_allow_html=True)
+    with col_a1:
+        if st.button("Analyze", key="analyze_btn"):
+            st.session_state.analyze_clicked = True
+    with col_a3:
+        if st.button("🔁 Start Over", key="start_over"):
+            st.session_state.step = 1
+            st.session_state.inputs = {}
+            st.session_state.foot_type = "Normal Arch"
+            st.session_state.footwear_pref = "Running shoes"
+            st.session_state.analyze_clicked = False
 
-    # Material Recommendation
-    st.markdown(f"<div style='background-color:#d7e3fc;padding:12px;border-radius:10px;font-weight:600;'>🧵 Material: <b>{material}</b></div>", unsafe_allow_html=True)
-
-    # Justification (Brown pastel)
-    st.markdown(
-        f"""
-        <div style='background-color:#d2b48c;padding:12px;border-radius:10px;font-weight:600;'>
-        💬 Justification: {justification}
-        </div>
-        """,
-        unsafe_allow_html=True
+    brand, material, justification = recommend(
+        foot_type, weight_group, activity_label, footwear_pref, age_group, gender
     )
 
-    # Tip of the Day (Yellow pastel)
+    if st.session_state.analyze_clicked:
+        gif_path = os.path.join(IMAGE_DIR, "walking.gif")
+        if os.path.exists(gif_path):
+            st.markdown(
+                f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
+                unsafe_allow_html=True,
+            )
+        speak_text(f"Recommendation ready. {brand} recommended.")
+
+    summary_md = f"""
+    <div class="summary-card">
+      <h3>🧠 <b>Biomechanics Summary</b></h3>
+      <p class="highlight-box">
+        👤 <b>Age:</b> {age_group} &nbsp; 🚻 <b>Gender:</b> {gender} <br/>
+        ⚖️ <b>Weight:</b> {weight_group} &nbsp; 🏃 <b>Activity:</b> {activity_label} <br/>
+        🦶 <b>Foot Type:</b> {foot_type} &nbsp; 👟 <b>Preference:</b> {footwear_pref}
+      </p>
+    </div>
+    """
+    st.markdown(summary_md, unsafe_allow_html=True)
+    st.markdown("---")
+
+    rec_col1, rec_col2 = st.columns([2,1])
+   with rec_col1:
+    st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
+
+    # 🟤 Brown pastel Justification box
+    st.markdown(
+        f"""
+        <div style="
+            background-color:#d2b48c;
+            border-left:6px solid #8b6f47;
+            padding:10px 14px;
+            border-radius:8px;
+            margin-top:8px;
+            font-weight:600;
+            color:#222;">
+            💬 Justification: {justification}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ✅ Yellow pastel Tip of the Day box
     tips = [
         "Stretch your calves daily to reduce heel strain.",
         "Replace running shoes every 500–800 km.",
@@ -387,46 +463,45 @@ elif st.session_state.step == 3:
     tip_text = random.choice(tips)
     st.markdown(
         f"""
-        <div style='background-color:#fff4b3;padding:12px;border-radius:10px;font-weight:600;'>
-        💡 Tip of the Day: {tip_text}
+        <div style="
+            background-color:#fff9c4;
+            border-left:6px solid #ffd54f;
+            padding:10px 14px;
+            border-radius:8px;
+            margin-top:8px;
+            font-weight:600;
+            color:#333;">
+            💡 Tip of the Day: {tip_text}
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
-    # ✅ Read-Aloud Button (Voice Assistant)
-    tts_text = f"Recommended shoe is {brand}. Material suggestion is {material}. Justification: {justification}. Tip of the day: {tip_text}."
-    tts_html = f"""
-        <script>
-        function speakText() {{
-            var text = `{tts_text}`;
-            var speech = new SpeechSynthesisUtterance(text);
-            speech.pitch = 1;
-            speech.rate = 1;
-            speech.volume = 1;
-            speech.lang = 'en-US';
-            window.speechSynthesis.speak(speech);
-        }}
-        </script>
-        <button onclick="speakText()" style="
-            background-color:#ba68c8;
-            color:white;
-            border:none;
-            padding:10px 20px;
-            border-radius:10px;
-            font-weight:600;
-            margin-top:10px;
-            cursor:pointer;
-        ">🔊 Read Aloud</button>
-    """
-    st.markdown(tts_html, unsafe_allow_html=True)
+        summary_text = textwrap.dedent(f"""
+        FootFit Analyzer - Recommendation
+        ---------------------------------
+        Age group: {age_group}
+        Gender: {gender}
+        Weight group: {weight_group}
+        Activity level: {activity_label}
+        Foot type: {foot_type}
+        Preferred footwear: {footwear_pref}
 
-    # ✅ Download Recommendation (Pink button)
-    rec_text = f"Recommended Shoe: {brand}\nMaterial: {material}\nJustification: {justification}\nTip of the Day: {tip_text}"
-    b64 = base64.b64encode(rec_text.encode()).decode()
-    href = f'<a href="data:file/txt;base64,{b64}" download="recommendation.txt"><button style="background-color:#ff4081;color:white;border:none;padding:10px 20px;border-radius:10px;font-weight:600;cursor:pointer;">💾 Download Recommendation (txt)</button></a>'
-    st.markdown(href, unsafe_allow_html=True)
+        Recommended Shoe: {brand}
+        Material: {material}
+        Justification: {justification}
+        """)
 
+        # ✅ Pink download button
+        b64 = base64.b64encode(summary_text.encode()).decode()
+        download_href = f"""
+        <a download="footfit_recommendation.txt" href="data:text/plain;base64,{b64}"
+           style="background-color:#ff4da6; color:white; padding:10px 14px; border-radius:8px;
+                  text-decoration:none; font-weight:bold; display:inline-block;">
+           📄 Download Recommendation (txt)
+        </a>
+        """
+        st.markdown(download_href, unsafe_allow_html=True)
 
     with rec_col2:
         st.subheader("👟 Virtual Shoe Wall")
@@ -445,18 +520,10 @@ elif st.session_state.step == 3:
         html_images += "</div>"
         st.markdown(html_images, unsafe_allow_html=True)
 
-    # ---------------------------
-    # Read-aloud button (explicit user gesture)
-    # ---------------------------
-    # Use a button (explicit gesture) rather than a checkbox so browsers allow audio playback.
-    if st.session_state.analyze_clicked:
-        if st.button("🔊 Read recommendation aloud", key="read_btn"):
-            speak_payload = f"Recommendation ready. I recommend {brand}. Material: {material}. Justification: {justification}"
-            payload_hash = hash(speak_payload)
-            # speak only if different from last spoken payload
-            if st.session_state.last_spoken_hash != payload_hash:
-                speak_text(speak_payload)
-                st.session_state.last_spoken_hash = payload_hash
+    st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
+
+    if st.session_state.get("read_aloud", False):
+        speak_text(f"I recommend {brand}. Material: {material}. {justification}")
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
