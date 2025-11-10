@@ -140,10 +140,11 @@ def set_white_theme():
         background-color: #cbb3eb !important;
     }
 
-    /* Checkbox label bold */
-    label[for*="read_aloud"] {
+    /* Stronger selector for checkbox label to ensure orange colour */
+    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {
+        color: orange !important;
         font-weight: bold !important;
-        color: #111 !important;
+        opacity: 1 !important;
     }
     </style>
     """
@@ -204,10 +205,11 @@ def set_activity_theme(activity_key):
         background-color: #cbb3eb !important;
     }}
 
-    /* ✅ Read-aloud label in orange */
-    label[for*="read_aloud"] {{
-        font-weight: bold !important;
+    /* Stronger selector for checkbox label to ensure orange colour */
+    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {{
         color: orange !important;
+        font-weight: bold !important;
+        opacity: 1 !important;
     }}
     </style>
     """
@@ -421,7 +423,7 @@ elif st.session_state.step == 3:
         html_images += "</div>"
         st.markdown(html_images, unsafe_allow_html=True)
 
-    st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
+    st.checkbox("🔊 *Read recommendation aloud*", key="read_aloud")
 
     if st.session_state.get("read_aloud", False):
         speak_text(f"I recommend {brand}. Material: {material}. {justification}")
