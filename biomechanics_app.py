@@ -431,26 +431,28 @@ elif st.session_state.step == 3:
     st.markdown("---")
 
     rec_col1, rec_col2 = st.columns([2,1])
-   with rec_col1:
-    st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
+    with col_a1:
+        if st.button("Analyze", key="analyze_btn"):
+            st.session_state.analyze_clicked = True
+    with col_a3:
+        if st.button("🔁 Start Over", key="start_over"):
+            st.session_state.step = 1
+            st.session_state.inputs = {}
+            st.session_state.foot_type = "Normal Arch"
+            st.session_state.footwear_pref = "Running shoes"
+            st.session_state.analyze_clicked = False
 
-    # 🟤 Brown pastel Justification box
-    st.markdown(
-        f"""
-        <div style="
-            background-color:#d2b48c;
-            border-left:6px solid #8b6f47;
-            padding:10px 14px;
-            border-radius:8px;
-            margin-top:8px;
-            font-weight:600;
-            color:#222;">
-            💬 Justification: {justification}
-        </div>
-        """,
-        unsafe_allow_html=True,
+    brand, material, justification = recommend(
+        foot_type, weight_group, activity_label, footwear_pref, age_group, gender
     )
+
+    if st.session_state.analyze_clicked:
+        gif_path = os.path.join(IMAGE_DIR, "walking.gif")
+        if os.path.exists(gif_path):
+            st.markdown(
+                f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
+                unsafe_allow_html=True,
+            )
 
     # ✅ Yellow pastel Tip of the Day box
     tips = [
