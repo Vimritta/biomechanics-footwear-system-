@@ -4,7 +4,7 @@ import os
 from PIL import Image
 import random
 import textwrap
-import base64  # for pink download button
+import base64  # added for pink download button
 
 # ---------------------------
 # Config
@@ -89,6 +89,7 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 # Themes
 # ---------------------------
 def set_white_theme():
+    """White theme + white dropdowns + light pastel violet navigation buttons"""
     css = """
     <style>
     .stApp { background-color: white; color: black; }
@@ -97,25 +98,11 @@ def set_white_theme():
         color: black !important;
     }
 
-    div[data-baseweb="select"] {
+    div[data-baseweb="select"], ul, li {
         background-color: white !important;
         color: black !important;
     }
-    div[data-baseweb="select"] span {
-        color: black !important;
-    }
-    div[data-baseweb="select"] div {
-        background-color: white !important;
-        color: black !important;
-    }
-    ul, li {
-        background-color: white !important;
-        color: black !important;
-    }
-    li:hover {
-        background-color: #f0f0f0 !important;
-        color: black !important;
-    }
+    li:hover { background-color: #f0f0f0 !important; }
 
     select, textarea, input {
         background-color: white !important;
@@ -132,12 +119,10 @@ def set_white_theme():
         border-radius: 6px;
         font-weight: 600 !important;
     }
-    .stButton>button:hover {
-        background-color: #cbb3eb !important;
-    }
+    .stButton>button:hover { background-color: #cbb3eb !important; }
 
-    /* Orange label for the last checkbox ("Read recommendation aloud") */
-    div.stCheckbox:last-of-type label {
+    /* ORANGE read aloud label */
+    div.stCheckbox label {
         color: orange !important;
         font-weight: bold !important;
     }
@@ -190,11 +175,9 @@ def set_activity_theme(activity_key):
         border-radius: 6px;
         font-weight: 600 !important;
     }}
-    .stButton>button:hover {{
-        background-color: #cbb3eb !important;
-    }}
-    /* Orange label for the last checkbox ("Read recommendation aloud") */
-    div.stCheckbox:last-of-type label {{
+    .stButton>button:hover {{ background-color: #cbb3eb !important; }}
+    /* Orange label for Read aloud */
+    div.stCheckbox label {{
         color: orange !important;
         font-weight: bold !important;
     }}
@@ -203,17 +186,46 @@ def set_activity_theme(activity_key):
     st.markdown(css, unsafe_allow_html=True)
 
 # ---------------------------
-# Step 3 Example (Output and Read Aloud)
+# Session initialization
 # ---------------------------
-set_activity_theme("Moderate")  # Example theme, replace dynamically in your app
+if 'step' not in st.session_state:
+    st.session_state.step = 1
+if 'inputs' not in st.session_state:
+    st.session_state.inputs = {}
+if 'analyze_clicked' not in st.session_state:
+    st.session_state.analyze_clicked = False
+if 'foot_type' not in st.session_state:
+    st.session_state.foot_type = "Normal Arch"
+if 'footwear_pref' not in st.session_state:
+    st.session_state.footwear_pref = "Running shoes"
 
-st.markdown("### 👟 Recommended Shoe:")
-st.markdown('<div class="rec-shoe">Nike Air Zoom</div>', unsafe_allow_html=True)
-st.markdown('<div class="rec-material">Lightweight mesh upper + Balanced foam midsole</div>', unsafe_allow_html=True)
+# ---------------------------
+# Header
+# ---------------------------
+col1, col2 = st.columns([1, 8])
+with col1:
+    logo = load_image("logo.png")
+    if logo:
+        st.image(logo, width=100)
+    else:
+        st.markdown("<h3>👟 FootFit Analyzer</h3>", unsafe_allow_html=True)
+with col2:
+    st.markdown("<h1 style='margin-top:8px'>FootFit Analyzer — Biomechanics Footwear Profiler</h1>", unsafe_allow_html=True)
+st.write("A biomechanics-informed recommender that suggests shoe brand, materials and explains why.")
+st.markdown("---")
+
+# ---------------------------
+# STEP 3 — Recommendation
+# ---------------------------
+set_activity_theme("Moderate")  # preview theme
+
+st.header("Step 3 — Recommendation & Biomechanics Summary")
+st.markdown('<div class="rec-shoe">👟 <b>Recommended Shoe:</b> Nike Air Zoom</div>', unsafe_allow_html=True)
+st.markdown('<div class="rec-material">🧵 <b>Material:</b> Lightweight mesh upper + Balanced foam midsole</div>', unsafe_allow_html=True)
 st.write("💬 Justification: Breathable upper and balanced cushioning suit neutral-footed runners.")
 st.write("💡 Tip of the Day: Air-dry shoes after workouts to prevent odor and damage.")
 
-# --- Pink Download Button ---
+# ✅ Pink download button
 summary_text = "Recommended Shoe: Nike Air Zoom\nMaterial: Lightweight mesh upper + Balanced foam midsole\nJustification: Breathable upper and balanced cushioning suit neutral-footed runners."
 b64 = base64.b64encode(summary_text.encode()).decode()
 download_href = f"""
@@ -225,14 +237,12 @@ download_href = f"""
 """
 st.markdown(download_href, unsafe_allow_html=True)
 
-# --- Read Aloud Checkbox (Orange label) ---
+# ✅ Orange “Read aloud” checkbox
 read_aloud = st.checkbox("🔊 Read recommendation aloud")
 if read_aloud:
     speak_text(summary_text)
 
-# --- Back Button Example ---
 st.button("← Back")
-
 
 
 
