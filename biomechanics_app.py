@@ -359,117 +359,74 @@ elif st.session_state.step == 3:
     set_activity_theme(activity_key)
 
     col_a1, col_a2, col_a3 = st.columns([1,1,2])
-    with col_a1:
-        if st.button("Analyze", key="analyze_btn"):
-            st.session_state.analyze_clicked = True
-    with col_a3:
-        if st.button("🔁 Start Over", key="start_over"):
-            st.session_state.step = 1
-            st.session_state.inputs = {}
-            st.session_state.foot_type = "Normal Arch"
-            st.session_state.footwear_pref = "Running shoes"
-            st.session_state.analyze_clicked = False
-            st.session_state.last_spoken_hash = None
+   with rec_col1:
+    # Shoe Recommendation
+    st.markdown(f"<div style='background-color:#b2fab4;padding:12px;border-radius:10px;font-weight:600;'>👟 Recommended Shoe: <b>{brand}</b></div>", unsafe_allow_html=True)
 
-    brand, material, justification = recommend(
-        foot_type, weight_group, activity_label, footwear_pref, age_group, gender
+    # Material Recommendation
+    st.markdown(f"<div style='background-color:#d7e3fc;padding:12px;border-radius:10px;font-weight:600;'>🧵 Material: <b>{material}</b></div>", unsafe_allow_html=True)
+
+    # Justification (Brown pastel)
+    st.markdown(
+        f"""
+        <div style='background-color:#d2b48c;padding:12px;border-radius:10px;font-weight:600;'>
+        💬 Justification: {justification}
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    if st.session_state.analyze_clicked:
-        gif_path = os.path.join(IMAGE_DIR, "walking.gif")
-        if os.path.exists(gif_path):
-            st.markdown(
-                f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
-                unsafe_allow_html=True,
-            )
+    # Tip of the Day (Yellow pastel)
+    tips = [
+        "Stretch your calves daily to reduce heel strain.",
+        "Replace running shoes every 500–800 km.",
+        "Use orthotic insoles when experiencing arch pain.",
+        "Air-dry shoes after workouts to prevent odor and damage.",
+        "Perform ankle rotations to strengthen stabilizers."
+    ]
+    tip_text = random.choice(tips)
+    st.markdown(
+        f"""
+        <div style='background-color:#fff4b3;padding:12px;border-radius:10px;font-weight:600;'>
+        💡 Tip of the Day: {tip_text}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    summary_md = f"""
-    <div class="summary-card">
-      <h3>🧠 <b>Biomechanics Summary</b></h3>
-      <p class="highlight-box">
-        👤 <b>Age:</b> {html_mod.escape(age_group)} &nbsp; 🚻 <b>Gender:</b> {html_mod.escape(gender)} <br/>
-        ⚖️ <b>Weight:</b> {html_mod.escape(weight_group)} &nbsp; 🏃 <b>Activity:</b> {html_mod.escape(activity_label)} <br/>
-        🦶 <b>Foot Type:</b> {html_mod.escape(foot_type)} &nbsp; 👟 <b>Preference:</b> {html_mod.escape(footwear_pref)}
-      </p>
-    </div>
+    # ✅ Read-Aloud Button (Voice Assistant)
+    tts_text = f"Recommended shoe is {brand}. Material suggestion is {material}. Justification: {justification}. Tip of the day: {tip_text}."
+    tts_html = f"""
+        <script>
+        function speakText() {{
+            var text = `{tts_text}`;
+            var speech = new SpeechSynthesisUtterance(text);
+            speech.pitch = 1;
+            speech.rate = 1;
+            speech.volume = 1;
+            speech.lang = 'en-US';
+            window.speechSynthesis.speak(speech);
+        }}
+        </script>
+        <button onclick="speakText()" style="
+            background-color:#ba68c8;
+            color:white;
+            border:none;
+            padding:10px 20px;
+            border-radius:10px;
+            font-weight:600;
+            margin-top:10px;
+            cursor:pointer;
+        ">🔊 Read Aloud</button>
     """
-    st.markdown(summary_md, unsafe_allow_html=True)
-    st.markdown("---")
+    st.markdown(tts_html, unsafe_allow_html=True)
 
-    rec_col1, rec_col2 = st.columns([2,1])
-    with rec_col1:
-        st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {html_mod.escape(brand)}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {html_mod.escape(material)}</div>", unsafe_allow_html=True)
+    # ✅ Download Recommendation (Pink button)
+    rec_text = f"Recommended Shoe: {brand}\nMaterial: {material}\nJustification: {justification}\nTip of the Day: {tip_text}"
+    b64 = base64.b64encode(rec_text.encode()).decode()
+    href = f'<a href="data:file/txt;base64,{b64}" download="recommendation.txt"><button style="background-color:#ff4081;color:white;border:none;padding:10px 20px;border-radius:10px;font-weight:600;cursor:pointer;">💾 Download Recommendation (txt)</button></a>'
+    st.markdown(href, unsafe_allow_html=True)
 
-        # ✅ Brown pastel justification box (escaped, safe)
-        justification_safe = html_mod.escape(justification)
-        st.markdown(
-            f"""
-            <div style="
-                background-color:#d2b48c;
-                border-left:6px solid #a67c52;
-                padding:12px 14px;
-                border-radius:8px;
-                margin-top:8px;
-                font-weight:600;
-                color:#111;">
-                💬 <strong>Justification:</strong> {justification_safe}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        # ✅ Yellow pastel Tip of the Day box
-        tips = [
-            "Stretch your calves daily to reduce heel strain.",
-            "Replace running shoes every 500–800 km.",
-            "Use orthotic insoles when experiencing arch pain.",
-            "Air-dry shoes after workouts to prevent odor and damage.",
-            "Perform ankle rotations to strengthen stabilizers."
-        ]
-        tip_text = random.choice(tips)
-        tip_text_safe = html_mod.escape(tip_text)
-        st.markdown(
-            f"""
-            <div style="
-                background-color:#fff9c4;
-                border-left:6px solid #ffd54f;
-                padding:10px 14px;
-                border-radius:8px;
-                margin-top:8px;
-                font-weight:600;
-                color:#333;">
-                💡 Tip of the Day: {tip_text_safe}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        summary_text = textwrap.dedent(f"""
-        FootFit Analyzer - Recommendation
-        ---------------------------------
-        Age group: {age_group}
-        Gender: {gender}
-        Weight group: {weight_group}
-        Activity level: {activity_label}
-        Foot type: {foot_type}
-        Preferred footwear: {footwear_pref}
-
-        Recommended Shoe: {brand}
-        Material: {material}
-        Justification: {justification}
-        """)
-
-        # ✅ Pink download button
-        b64 = base64.b64encode(summary_text.encode()).decode()
-        download_href = f"""
-        <a download="footfit_recommendation.txt" href="data:text/plain;base64,{b64}"
-           style="background-color:#ff4da6; color:white; padding:10px 14px; border-radius:8px;
-                  text-decoration:none; font-weight:bold; display:inline-block;">
-           📄 Download Recommendation (txt)
-        </a>
-        """
-        st.markdown(download_href, unsafe_allow_html=True)
 
     with rec_col2:
         st.subheader("👟 Virtual Shoe Wall")
