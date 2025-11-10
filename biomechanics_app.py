@@ -89,17 +89,14 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 # Themes
 # ---------------------------
 def set_white_theme():
-    """White theme + white dropdowns + light pastel violet navigation buttons"""
     css = """
     <style>
     .stApp { background-color: white; color: black; }
 
-    /* General text color */
     .stMarkdown, .stText, .stSelectbox, .stRadio, label, div, p, h1, h2, h3, h4, h5, h6 {
         color: black !important;
     }
 
-    /* Dropdowns: white background and white open list */
     div[data-baseweb="select"] {
         background-color: white !important;
         color: black !important;
@@ -128,7 +125,6 @@ def set_white_theme():
         padding: 6px;
     }
 
-    /* Navigation buttons (Next, Back) — light pastel violet */
     .stButton>button {
         background-color: #d9c2f0 !important;
         color: black !important;
@@ -140,17 +136,16 @@ def set_white_theme():
         background-color: #cbb3eb !important;
     }
 
-    /* Checkbox label bold */
+    /* Orange label for read-aloud checkbox */
     label[for*="read_aloud"] {
         font-weight: bold !important;
-        color: #111 !important;
+        color: orange !important;
     }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 def set_activity_theme(activity_key):
-    """Activity-based theme (Step 3)"""
     if activity_key == "Low":
         color = "#d8ecff"; accent = "#3478b6"
     elif activity_key == "Moderate":
@@ -161,7 +156,6 @@ def set_activity_theme(activity_key):
     css = f"""
     <style>
     .stApp {{ background: {color}; color: #111 !important; }}
-
     .summary-card {{
         background: white; border-radius: 10px;
         padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
@@ -173,10 +167,8 @@ def set_activity_theme(activity_key):
         background: rgba(255,255,255,0.6);
         font-weight: 600; color: #111;
     }}
-
-    /* Recommended shoe & material boxes */
     .rec-shoe {{
-        background-color: #b8f5c1 !important; /* pastel green */
+        background-color: #b8f5c1 !important;
         color: #000 !important;
         font-weight: bold;
         font-size: 1.2em;
@@ -184,15 +176,13 @@ def set_activity_theme(activity_key):
         padding: 10px;
     }}
     .rec-material {{
-        background-color: #cfe9ff !important; /* pastel blue */
+        background-color: #cfe9ff !important;
         color: #000 !important;
         font-weight: bold;
         font-size: 1.1em;
         border-radius: 8px;
         padding: 10px;
     }}
-
-    /* Buttons — pastel violet */
     .stButton>button {{
         background-color: #d9c2f0 !important;
         color: black !important;
@@ -203,15 +193,20 @@ def set_activity_theme(activity_key):
     .stButton>button:hover {{
         background-color: #cbb3eb !important;
     }}
-
-    /* Checkbox label bold */
+    /* Orange label for read-aloud checkbox */
     label[for*="read_aloud"] {{
         font-weight: bold !important;
-        color: #111 !important;
+        color: orange !important;
     }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
+
+# ---------------------------
+# (The rest of your code remains unchanged)
+# ---------------------------
+# Continue from your session setup and steps (1, 2, and 3)
+
 
 # ---------------------------
 # Session initialization
