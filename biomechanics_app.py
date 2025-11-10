@@ -30,6 +30,7 @@ def speak_text(text):
     """
     Safely injects JS to speak the provided text.
     Uses json.dumps to build a safe JS string literal.
+    Note: Browsers typically require an explicit user gesture to allow audio playback.
     """
     safe_js_string = json.dumps(text)
     html = f"""
@@ -38,7 +39,8 @@ def speak_text(text):
         try {{
             const msg = new SpeechSynthesisUtterance({safe_js_string});
             msg.rate = 1.0;
-            window.speechSynthesis.cancel(); // stop any previous speech
+            // cancel any previous speech
+            try {{ window.speechSynthesis.cancel(); }} catch(e) {{ }}
             window.speechSynthesis.speak(msg);
         }} catch(e) {{
             console.log("Speech error:", e);
@@ -368,9 +370,6 @@ elif st.session_state.step == 3:
             st.session_state.footwear_pref = "Running shoes"
             st.session_state.analyze_clicked = False
             st.session_state.last_spoken_hash = None
-            # also clear read aloud flag
-            if "read_aloud" in st.session_state:
-                st.session_state.read_aloud = False
 
     brand, material, justification = recommend(
         foot_type, weight_group, activity_label, footwear_pref, age_group, gender
@@ -383,8 +382,6 @@ elif st.session_state.step == 3:
                 f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
                 unsafe_allow_html=True,
             )
-        # announce once when analysis clicked (non-blocking)
-        # do not call speak_text here unconditionally; the read_aloud checkbox controls spoken output
 
     summary_md = f"""
     <div class="summary-card">
@@ -491,19 +488,24 @@ elif st.session_state.step == 3:
         html_images += "</div>"
         st.markdown(html_images, unsafe_allow_html=True)
 
-    # Read-aloud checkbox. When checked and analysis done, speak the recommendation once (unless content changed).
-    st.checkbox("🔊 *Read recommendation aloud*", key="read_aloud")
-    if st.session_state.get("read_aloud", False) and st.session_state.analyze_clicked:
-        # Build the spoken string
-        speak_payload = f"Recommendation ready. I recommend {brand}. Material: {material}. Justification: {justification}"
-        # Use a simple hash to avoid repeating the same speech on reruns
-        payload_hash = hash(speak_payload)
-        if st.session_state.last_spoken_hash != payload_hash:
-            speak_text(speak_payload)
-            st.session_state.last_spoken_hash = payload_hash
+    # ---------------------------
+    # Read-aloud button (explicit user gesture)
+    # ---------------------------
+    # Use a button (explicit gesture) rather than a checkbox so browsers allow audio playback.
+    if st.session_state.analyze_clicked:
+        if st.button("🔊 Read recommendation aloud", key="read_btn"):
+            speak_payload = f"Recommendation ready. I recommend {brand}. Material: {material}. Justification: {justification}"
+            payload_hash = hash(speak_payload)
+            # speak only if different from last spoken payload
+            if st.session_state.last_spoken_hash != payload_hash:
+                speak_text(speak_payload)
+                st.session_state.last_spoken_hash = payload_hash
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
+
+
+   
 
 
 
