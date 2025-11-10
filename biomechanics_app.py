@@ -375,7 +375,8 @@ elif st.session_state.step == 3:
     st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
     st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
 
-    # ✅ Brown pastel justification box
+    # ✅ Brown pastel justification box (safe HTML for Streamlit)
+    justification_safe = justification.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     st.markdown(
         f"""
         <div style="
@@ -386,7 +387,7 @@ elif st.session_state.step == 3:
             margin-top:8px;
             font-weight:600;
             color:#111;">
-            💬 Justification: {justification}
+            Justification: {justification_safe}
         </div>
         """,
         unsafe_allow_html=True,
@@ -401,6 +402,7 @@ elif st.session_state.step == 3:
         "Perform ankle rotations to strengthen stabilizers."
     ]
     tip_text = random.choice(tips)
+    tip_text_safe = tip_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     st.markdown(
         f"""
         <div style="
@@ -411,11 +413,12 @@ elif st.session_state.step == 3:
             margin-top:8px;
             font-weight:600;
             color:#333;">
-            💡 Tip of the Day: {tip_text}
+            💡 Tip of the Day: {tip_text_safe}
         </div>
         """,
         unsafe_allow_html=True,
     )
+
 
         summary_text = textwrap.dedent(f"""
         FootFit Analyzer - Recommendation
