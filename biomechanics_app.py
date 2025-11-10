@@ -5,6 +5,7 @@ from PIL import Image
 import random
 import textwrap
 import base64  # added for pink download button
+import html as html_escape  # for escaping text used in raw HTML
 
 # ---------------------------
 # Config
@@ -25,14 +26,21 @@ def load_image(name):
     return None
 
 def speak_text(text):
+    """Use a small safe HTML snippet to call Web Speech API. Escape text first."""
+    safe = html_escape.escape(text)
     html = f"""
     <script>
-    const msg = new SpeechSynthesisUtterance({repr(text)});
-    msg.rate = 1.0;
-    window.speechSynthesis.speak(msg);
+    try {{
+        var msg = new SpeechSynthesisUtterance("{safe}");
+        msg.rate = 1.0;
+        window.speechSynthesis.speak(msg);
+    }} catch(e) {{
+        console.log("Speech synthesis not supported or blocked.", e);
+    }}
     </script>
     """
-    st.components.v1.html(html, height=0)
+    # keep height small to avoid layout issues
+    st.components.v1.html(html, height=10)
 
 # ---------------------------
 # Recommender logic
@@ -49,22 +57,22 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
     if footwear_pref == "Running shoes":
         if foot_type == "Flat Arch":
             material = "Dual-density EVA midsole + Arch-stability foam"
-            justification = "Justification: Dual-density EVA supports the medial arch and prevents over-pronation while cushioning repeated impact."
+            justification = "Dual-density EVA supports the medial arch and prevents over-pronation while cushioning repeated impact."
         elif foot_type == "High Arch":
             material = "EVA midsole + Responsive gel insert"
-            justification = "Justification: Additional shock absorption and a gel insert disperse high-pressure points common with high arches."
+            justification = "Additional shock absorption and a gel insert disperse high-pressure points common with high arches."
         else:
             material = "Lightweight mesh upper + Balanced foam midsole"
-            justification = "Justification: Breathable upper and balanced cushioning suit neutral-footed runners."
+            justification = "Breathable upper and balanced cushioning suit neutral-footed runners."
     elif footwear_pref == "Cross-training shoes":
         material = "Dense EVA + Reinforced lateral upper + TPU heel counter"
-        justification = "Justification: Dense EVA and reinforced upper provide lateral stability for multi-directional movements."
+        justification = "Dense EVA and reinforced upper provide lateral stability for multi-directional movements."
     elif footwear_pref == "Casual/fashion sneakers":
         material = "Soft foam midsole + Textile upper"
-        justification = "Justification: Comfortable for daily wear with breathable textile uppers and soft foam for casual cushioning."
+        justification = "Comfortable for daily wear with breathable textile uppers and soft foam for casual cushioning."
     else:
         material = "Soft EVA footbed + contoured cork or foam support"
-        justification = "Justification: Soft footbed for comfort and a contoured profile to support arches during light activity."
+        justification = "Soft footbed for comfort and a contoured profile to support arches during light activity."
 
     if weight_group == "Over 90 kg":
         material = material.replace("EVA", "Thick EVA").replace("Dense EVA", "High-density EVA").replace("soft foam", "high-density foam")
@@ -72,10 +80,10 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 
     if "High" in activity:
         material += " + Breathable knit upper"
-        justification = justification[:-1] + " Ideal for frequent activity.*"
+        justification = justification.rstrip(".") + " Ideal for frequent activity."
     elif "Low" in activity:
         material += " + Soft rubber outsole for comfort"
-        justification = justification[:-1] + " Better for low-activity comfort.*"
+        justification = justification.rstrip(".") + " Better for low-activity comfort."
 
     if gender == "Female":
         justification = "Designed for narrower heels and a more contoured fit. " + justification
@@ -355,15 +363,16 @@ elif st.session_state.step == 3:
                 f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
                 unsafe_allow_html=True,
             )
+        # speak with escaped text
         speak_text(f"Recommendation ready. {brand} recommended.")
 
     summary_md = f"""
     <div class="summary-card">
       <h3>🧠 <b>Biomechanics Summary</b></h3>
       <p class="highlight-box">
-        👤 <b>Age:</b> {age_group} &nbsp; 🚻 <b>Gender:</b> {gender} <br/>
-        ⚖️ <b>Weight:</b> {weight_group} &nbsp; 🏃 <b>Activity:</b> {activity_label} <br/>
-        🦶 <b>Foot Type:</b> {foot_type} &nbsp; 👟 <b>Preference:</b> {footwear_pref}
+        👤 <b>Age:</b> {html_escape.escape(age_group)} &nbsp; 🚻 <b>Gender:</b> {html_escape.escape(gender)} <br/>
+        ⚖️ <b>Weight:</b> {html_escape.escape(weight_group)} &nbsp; 🏃 <b>Activity:</b> {html_escape.escape(activity_label)} <br/>
+        🦶 <b>Foot Type:</b> {html_escape.escape(foot_type)} &nbsp; 👟 <b>Preference:</b> {html_escape.escape(footwear_pref)}
       </p>
     </div>
     """
@@ -371,54 +380,53 @@ elif st.session_state.step == 3:
     st.markdown("---")
 
     rec_col1, rec_col2 = st.columns([2,1])
- with rec_col1:
-    st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
+    with rec_col1:
+        st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {html_escape.escape(brand)}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {html_escape.escape(material)}</div>", unsafe_allow_html=True)
 
-    # ✅ Brown pastel justification box (safe HTML for Streamlit)
-    justification_safe = justification.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    st.markdown(
-        f"""
-        <div style="
-            background-color:#d2b48c;  /* brown pastel */
-            border-left:6px solid #a67c52;
-            padding:12px 14px;
-            border-radius:8px;
-            margin-top:8px;
-            font-weight:600;
-            color:#111;">
-            Justification: {justification_safe}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        # ✅ Brown pastel justification box (escaped for safety)
+        justification_safe = html_escape.escape(justification)
+        st.markdown(
+            f"""
+            <div style="
+                background-color:#d2b48c;
+                border-left:6px solid #a67c52;
+                padding:12px 14px;
+                border-radius:8px;
+                margin-top:8px;
+                font-weight:600;
+                color:#111;">
+                💬 <strong>Justification:</strong> {justification_safe}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-    # ✅ Yellow pastel Tip of the Day box
-    tips = [
-        "Stretch your calves daily to reduce heel strain.",
-        "Replace running shoes every 500–800 km.",
-        "Use orthotic insoles when experiencing arch pain.",
-        "Air-dry shoes after workouts to prevent odor and damage.",
-        "Perform ankle rotations to strengthen stabilizers."
-    ]
-    tip_text = random.choice(tips)
-    tip_text_safe = tip_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    st.markdown(
-        f"""
-        <div style="
-            background-color:#fff9c4;
-            border-left:6px solid #ffd54f;
-            padding:10px 14px;
-            border-radius:8px;
-            margin-top:8px;
-            font-weight:600;
-            color:#333;">
-            💡 Tip of the Day: {tip_text_safe}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
+        # ✅ Yellow pastel Tip of the Day box
+        tips = [
+            "Stretch your calves daily to reduce heel strain.",
+            "Replace running shoes every 500–800 km.",
+            "Use orthotic insoles when experiencing arch pain.",
+            "Air-dry shoes after workouts to prevent odor and damage.",
+            "Perform ankle rotations to strengthen stabilizers."
+        ]
+        tip_text = random.choice(tips)
+        tip_text_safe = html_escape.escape(tip_text)
+        st.markdown(
+            f"""
+            <div style="
+                background-color:#fff9c4;
+                border-left:6px solid #ffd54f;
+                padding:10px 14px;
+                border-radius:8px;
+                margin-top:8px;
+                font-weight:600;
+                color:#333;">
+                💡 Tip of the Day: {tip_text_safe}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         summary_text = textwrap.dedent(f"""
         FootFit Analyzer - Recommendation
@@ -463,9 +471,10 @@ elif st.session_state.step == 3:
         html_images += "</div>"
         st.markdown(html_images, unsafe_allow_html=True)
 
+    # Use a checkbox and the session state key "read_aloud"
     st.checkbox("🔊 *Read recommendation aloud*", key="read_aloud")
 
-    if st.session_state.get("read_aloud", False):
+    if st.session_state.get("read_aloud", False) and st.session_state.analyze_clicked:
         speak_text(f"I recommend {brand}. Material: {material}. {justification}")
 
     if st.button("← Back", key="back_to_step2"):
