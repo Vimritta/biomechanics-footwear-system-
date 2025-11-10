@@ -5,7 +5,8 @@ from PIL import Image
 import random
 import textwrap
 import base64  # added for pink download button
-import html as html_escape  # for escaping text used in raw HTML
+import json
+import html as html_mod
 
 # ---------------------------
 # Config
@@ -26,20 +27,26 @@ def load_image(name):
     return None
 
 def speak_text(text):
-    """Use a small safe HTML snippet to call Web Speech API. Escape text first."""
-    safe = html_escape.escape(text)
+    """
+    Safely injects JS to speak the provided text.
+    Uses json.dumps to build a safe JS string literal.
+    """
+    safe_js_string = json.dumps(text)
     html = f"""
     <script>
-    try {{
-        var msg = new SpeechSynthesisUtterance("{safe}");
-        msg.rate = 1.0;
-        window.speechSynthesis.speak(msg);
-    }} catch(e) {{
-        console.log("Speech synthesis not supported or blocked.", e);
-    }}
+    (function() {{
+        try {{
+            const msg = new SpeechSynthesisUtterance({safe_js_string});
+            msg.rate = 1.0;
+            window.speechSynthesis.cancel(); // stop any previous speech
+            window.speechSynthesis.speak(msg);
+        }} catch(e) {{
+            console.log("Speech error:", e);
+        }}
+    }})();
     </script>
     """
-    # keep height small to avoid layout issues
+    # small height so Streamlit won't reserve a lot of space
     st.components.v1.html(html, height=10)
 
 # ---------------------------
@@ -80,10 +87,16 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 
     if "High" in activity:
         material += " + Breathable knit upper"
-        justification = justification.rstrip(".") + " Ideal for frequent activity."
+        if justification.endswith("."):
+            justification = justification[:-1] + " Ideal for frequent activity."
+        else:
+            justification += " Ideal for frequent activity."
     elif "Low" in activity:
         material += " + Soft rubber outsole for comfort"
-        justification = justification.rstrip(".") + " Better for low-activity comfort."
+        if justification.endswith("."):
+            justification = justification[:-1] + " Better for low-activity comfort."
+        else:
+            justification += " Better for low-activity comfort."
 
     if gender == "Female":
         justification = "Designed for narrower heels and a more contoured fit. " + justification
@@ -236,6 +249,9 @@ if 'foot_type' not in st.session_state:
     st.session_state.foot_type = "Normal Arch"
 if 'footwear_pref' not in st.session_state:
     st.session_state.footwear_pref = "Running shoes"
+# flag to avoid repeated speak on reruns if needed
+if 'last_spoken_hash' not in st.session_state:
+    st.session_state.last_spoken_hash = None
 
 # ---------------------------
 # Header
@@ -351,6 +367,10 @@ elif st.session_state.step == 3:
             st.session_state.foot_type = "Normal Arch"
             st.session_state.footwear_pref = "Running shoes"
             st.session_state.analyze_clicked = False
+            st.session_state.last_spoken_hash = None
+            # also clear read aloud flag
+            if "read_aloud" in st.session_state:
+                st.session_state.read_aloud = False
 
     brand, material, justification = recommend(
         foot_type, weight_group, activity_label, footwear_pref, age_group, gender
@@ -363,16 +383,16 @@ elif st.session_state.step == 3:
                 f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
                 unsafe_allow_html=True,
             )
-        # speak with escaped text
-        speak_text(f"Recommendation ready. {brand} recommended.")
+        # announce once when analysis clicked (non-blocking)
+        # do not call speak_text here unconditionally; the read_aloud checkbox controls spoken output
 
     summary_md = f"""
     <div class="summary-card">
       <h3>🧠 <b>Biomechanics Summary</b></h3>
       <p class="highlight-box">
-        👤 <b>Age:</b> {html_escape.escape(age_group)} &nbsp; 🚻 <b>Gender:</b> {html_escape.escape(gender)} <br/>
-        ⚖️ <b>Weight:</b> {html_escape.escape(weight_group)} &nbsp; 🏃 <b>Activity:</b> {html_escape.escape(activity_label)} <br/>
-        🦶 <b>Foot Type:</b> {html_escape.escape(foot_type)} &nbsp; 👟 <b>Preference:</b> {html_escape.escape(footwear_pref)}
+        👤 <b>Age:</b> {html_mod.escape(age_group)} &nbsp; 🚻 <b>Gender:</b> {html_mod.escape(gender)} <br/>
+        ⚖️ <b>Weight:</b> {html_mod.escape(weight_group)} &nbsp; 🏃 <b>Activity:</b> {html_mod.escape(activity_label)} <br/>
+        🦶 <b>Foot Type:</b> {html_mod.escape(foot_type)} &nbsp; 👟 <b>Preference:</b> {html_mod.escape(footwear_pref)}
       </p>
     </div>
     """
@@ -381,11 +401,11 @@ elif st.session_state.step == 3:
 
     rec_col1, rec_col2 = st.columns([2,1])
     with rec_col1:
-        st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {html_escape.escape(brand)}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {html_escape.escape(material)}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {html_mod.escape(brand)}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {html_mod.escape(material)}</div>", unsafe_allow_html=True)
 
-        # ✅ Brown pastel justification box (escaped for safety)
-        justification_safe = html_escape.escape(justification)
+        # ✅ Brown pastel justification box (escaped, safe)
+        justification_safe = html_mod.escape(justification)
         st.markdown(
             f"""
             <div style="
@@ -411,7 +431,7 @@ elif st.session_state.step == 3:
             "Perform ankle rotations to strengthen stabilizers."
         ]
         tip_text = random.choice(tips)
-        tip_text_safe = html_escape.escape(tip_text)
+        tip_text_safe = html_mod.escape(tip_text)
         st.markdown(
             f"""
             <div style="
@@ -471,14 +491,20 @@ elif st.session_state.step == 3:
         html_images += "</div>"
         st.markdown(html_images, unsafe_allow_html=True)
 
-    # Use a checkbox and the session state key "read_aloud"
+    # Read-aloud checkbox. When checked and analysis done, speak the recommendation once (unless content changed).
     st.checkbox("🔊 *Read recommendation aloud*", key="read_aloud")
-
     if st.session_state.get("read_aloud", False) and st.session_state.analyze_clicked:
-        speak_text(f"I recommend {brand}. Material: {material}. {justification}")
+        # Build the spoken string
+        speak_payload = f"Recommendation ready. I recommend {brand}. Material: {material}. Justification: {justification}"
+        # Use a simple hash to avoid repeating the same speech on reruns
+        payload_hash = hash(speak_payload)
+        if st.session_state.last_spoken_hash != payload_hash:
+            speak_text(speak_payload)
+            st.session_state.last_spoken_hash = payload_hash
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
+
 
 
 
