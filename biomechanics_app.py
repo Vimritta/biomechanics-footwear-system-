@@ -10,6 +10,7 @@ import base64  # added for pink download button
 # Config
 # ---------------------------
 st.set_page_config(page_title="FootFit Analyzer", layout="wide", page_icon="👟")
+
 IMAGE_DIR = "images"
 
 # ---------------------------
@@ -98,13 +99,7 @@ def set_white_theme():
         color: black !important;
     }
 
-    div[data-baseweb="select"], ul, li {
-        background-color: white !important;
-        color: black !important;
-    }
-    li:hover { background-color: #f0f0f0 !important; }
-
-    select, textarea, input {
+    div[data-baseweb="select"], select, textarea, input {
         background-color: white !important;
         color: black !important;
         border: 1px solid #ccc !important;
@@ -112,6 +107,7 @@ def set_white_theme():
         padding: 6px;
     }
 
+    /* Buttons */
     .stButton>button {
         background-color: #d9c2f0 !important;
         color: black !important;
@@ -121,8 +117,8 @@ def set_white_theme():
     }
     .stButton>button:hover { background-color: #cbb3eb !important; }
 
-    /* ORANGE read aloud label */
-    div.stCheckbox label {
+    /* Orange for last checkbox label */
+    div.stCheckbox:last-of-type label {
         color: orange !important;
         font-weight: bold !important;
     }
@@ -131,6 +127,7 @@ def set_white_theme():
     st.markdown(css, unsafe_allow_html=True)
 
 def set_activity_theme(activity_key):
+    """Activity-based theme (Step 3)"""
     if activity_key == "Low":
         color = "#d8ecff"; accent = "#3478b6"
     elif activity_key == "Moderate":
@@ -142,42 +139,32 @@ def set_activity_theme(activity_key):
     <style>
     .stApp {{ background: {color}; color: #111 !important; }}
     .summary-card {{
-        background: white; border-radius: 10px;
-        padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        font-weight: 600; color: #111;
+        background: white; border-radius: 10px; padding: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06); font-weight: 600; color: #111;
     }}
     .highlight-box {{
-        border-left: 6px solid {accent};
-        padding:12px; border-radius:8px;
-        background: rgba(255,255,255,0.6);
-        font-weight: 600; color: #111;
+        border-left: 6px solid {accent}; padding:12px; border-radius:8px;
+        background: rgba(255,255,255,0.6); font-weight: 600; color: #111;
     }}
     .rec-shoe {{
         background-color: #b8f5c1 !important;
-        color: #000 !important;
-        font-weight: bold;
-        font-size: 1.2em;
-        border-radius: 8px;
-        padding: 10px;
+        color: #000 !important; font-weight: bold; font-size: 1.2em;
+        border-radius: 8px; padding: 10px;
     }}
     .rec-material {{
         background-color: #cfe9ff !important;
-        color: #000 !important;
-        font-weight: bold;
-        font-size: 1.1em;
-        border-radius: 8px;
-        padding: 10px;
+        color: #000 !important; font-weight: bold; font-size: 1.1em;
+        border-radius: 8px; padding: 10px;
     }}
     .stButton>button {{
-        background-color: #d9c2f0 !important;
-        color: black !important;
-        border: 1px solid #b495d6 !important;
-        border-radius: 6px;
+        background-color: #d9c2f0 !important; color: black !important;
+        border: 1px solid #b495d6 !important; border-radius: 6px;
         font-weight: 600 !important;
     }}
     .stButton>button:hover {{ background-color: #cbb3eb !important; }}
-    /* Orange label for Read aloud */
-    div.stCheckbox label {{
+
+    /* Orange label for "Read recommendation aloud" */
+    div.stCheckbox:last-of-type label {{
         color: orange !important;
         font-weight: bold !important;
     }}
@@ -215,34 +202,186 @@ st.write("A biomechanics-informed recommender that suggests shoe brand, material
 st.markdown("---")
 
 # ---------------------------
-# STEP 3 — Recommendation
+# STEP 1
 # ---------------------------
-set_activity_theme("Moderate")  # preview theme
+if st.session_state.step == 1:
+    set_white_theme()
+    st.header("Step 1 — Personal Info")
+    age_label = st.selectbox("Select your Age Group", ["Under 18", "18–25", "26–35", "36–50", "51–65", "Over 65"], index=1)
+    gender_label = st.selectbox("Select Gender", ["Male", "Female"], index=0)
+    weight_label = st.selectbox("Select Weight Category", ["Under 50 kg", "50–70 kg", "71–90 kg", "Over 90 kg"], index=1)
+    next_col1, next_col2 = st.columns([1,1])
+    with next_col2:
+        if st.button("Next →", key="to_step2"):
+            st.session_state.inputs.update({
+                "age_group": age_label,
+                "gender": gender_label,
+                "weight_group": weight_label,
+            })
+            st.session_state.step = 2
 
-st.header("Step 3 — Recommendation & Biomechanics Summary")
-st.markdown('<div class="rec-shoe">👟 <b>Recommended Shoe:</b> Nike Air Zoom</div>', unsafe_allow_html=True)
-st.markdown('<div class="rec-material">🧵 <b>Material:</b> Lightweight mesh upper + Balanced foam midsole</div>', unsafe_allow_html=True)
-st.write("💬 Justification: Breathable upper and balanced cushioning suit neutral-footed runners.")
-st.write("💡 Tip of the Day: Air-dry shoes after workouts to prevent odor and damage.")
+# ---------------------------
+# STEP 2
+# ---------------------------
+elif st.session_state.step == 2:
+    set_white_theme()
+    st.header("Step 2 — Foot & Activity Details")
+    activity_label = st.selectbox(
+        "Select your Daily Activity Level",
+        ["Low (mostly sitting)", "Moderate (walking/standing sometimes)", "High (frequent walking/running)"],
+        index=1
+    )
+    st.session_state.inputs["activity_label"] = activity_label
+    st.session_state.inputs["activity_key"] = (
+        "Low" if "Low" in activity_label else ("Moderate" if "Moderate" in activity_label else "High")
+    )
 
-# ✅ Pink download button
-summary_text = "Recommended Shoe: Nike Air Zoom\nMaterial: Lightweight mesh upper + Balanced foam midsole\nJustification: Breathable upper and balanced cushioning suit neutral-footed runners."
-b64 = base64.b64encode(summary_text.encode()).decode()
-download_href = f"""
-<a download="footfit_recommendation.txt" href="data:text/plain;base64,{b64}"
-   style="background-color:#ff4da6; color:white; padding:10px 14px; border-radius:8px;
-          text-decoration:none; font-weight:bold; display:inline-block;">
-   📄 Download Recommendation (txt)
-</a>
-"""
-st.markdown(download_href, unsafe_allow_html=True)
+    st.subheader("👣 Foot Type — choose one")
+    foot_options = [("Flat Arch","flat.png"), ("Normal Arch","normal.png"), ("High Arch","high_arch.png")]
+    cols = st.columns(len(foot_options))
+    for (label, imgfile), col in zip(foot_options, cols):
+        with col:
+            img = load_image(imgfile)
+            selected = (st.session_state.foot_type == label)
+            if img: st.image(img, caption=label, width=140)
+            if st.button(label, key=f"ftbtn_{label}"):
+                st.session_state.foot_type = label
+                st.session_state.inputs["foot_type"] = label
+    st.write(f"👉 Currently selected foot type: {st.session_state.foot_type}")
 
-# ✅ Orange “Read aloud” checkbox
-read_aloud = st.checkbox("🔊 Read recommendation aloud")
-if read_aloud:
-    speak_text(summary_text)
+    st.subheader("👟 Type of footwear you prefer")
+    options = ["Running shoes", "Cross-training shoes", "Casual/fashion sneakers", "Sandals or slippers"]
+    new_pref = st.selectbox("Select preferred footwear", options, index=options.index(st.session_state.footwear_pref))
+    st.session_state.footwear_pref = new_pref
+    st.session_state.inputs["footwear_pref"] = new_pref
+    st.write(f"👉 Currently selected footwear: {st.session_state.footwear_pref}")
 
-st.button("← Back")
+    back_col, next_col = st.columns([1,1])
+    with back_col:
+        if st.button("← Back", key="back_step1"):
+            st.session_state.step = 1
+    with next_col:
+        if st.button("Next →", key="to_step3"):
+            st.session_state.step = 3
+
+# ---------------------------
+# STEP 3
+# ---------------------------
+elif st.session_state.step == 3:
+    st.header("Step 3 — Recommendation & Biomechanics Summary")
+
+    def get_val(key, default):
+        return st.session_state.inputs.get(key, st.session_state.get(key, default))
+
+    age_group = get_val("age_group", "18–25")
+    gender = get_val("gender", "Male")
+    weight_group = get_val("weight_group", "50–70 kg")
+    activity_label = get_val("activity_label", "Moderate (walking/standing sometimes)")
+    activity_key = get_val("activity_key", "Moderate")
+    foot_type = get_val("foot_type", "Normal Arch")
+    footwear_pref = get_val("footwear_pref", "Running shoes")
+
+    set_activity_theme(activity_key)
+
+    col_a1, col_a2, col_a3 = st.columns([1,1,2])
+    with col_a1:
+        if st.button("Analyze", key="analyze_btn"):
+            st.session_state.analyze_clicked = True
+    with col_a3:
+        if st.button("🔁 Start Over", key="start_over"):
+            st.session_state.step = 1
+            st.session_state.inputs = {}
+            st.session_state.foot_type = "Normal Arch"
+            st.session_state.footwear_pref = "Running shoes"
+            st.session_state.analyze_clicked = False
+
+    brand, material, justification = recommend(
+        foot_type, weight_group, activity_label, footwear_pref, age_group, gender
+    )
+
+    if st.session_state.analyze_clicked:
+        gif_path = os.path.join(IMAGE_DIR, "walking.gif")
+        if os.path.exists(gif_path):
+            st.markdown(f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>", unsafe_allow_html=True)
+        speak_text(f"Recommendation ready. {brand} recommended.")
+
+        summary_md = f"""
+        <div class="summary-card">
+            <h3>🧠 <b>Biomechanics Summary</b></h3>
+            <p class="highlight-box">
+                👤 <b>Age:</b> {age_group} &nbsp; 🚻 <b>Gender:</b> {gender} <br/>
+                ⚖️ <b>Weight:</b> {weight_group} &nbsp; 🏃 <b>Activity:</b> {activity_label} <br/>
+                🦶 <b>Foot Type:</b> {foot_type} &nbsp; 👟 <b>Preference:</b> {footwear_pref}
+            </p>
+        </div>
+        """
+        st.markdown(summary_md, unsafe_allow_html=True)
+        st.markdown("---")
+
+        rec_col1, rec_col2 = st.columns([2,1])
+        with rec_col1:
+            st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
+            st.write(f"💬 {justification}")
+            tips = [
+                "Stretch your calves daily to reduce heel strain.",
+                "Replace running shoes every 500–800 km.",
+                "Use orthotic insoles when experiencing arch pain.",
+                "Air-dry shoes after workouts to prevent odor and damage.",
+                "Perform ankle rotations to strengthen stabilizers."
+            ]
+            st.markdown(f"💡 Tip of the Day: {random.choice(tips)}")
+
+            summary_text = textwrap.dedent(f"""
+            FootFit Analyzer - Recommendation
+            ---------------------------------
+            Age group: {age_group}
+            Gender: {gender}
+            Weight group: {weight_group}
+            Activity level: {activity_label}
+            Foot type: {foot_type}
+            Preferred footwear: {footwear_pref}
+            Recommended Shoe: {brand}
+            Material: {material}
+            Justification: {justification}
+            """)
+
+            # ✅ Pink download button
+            b64 = base64.b64encode(summary_text.encode()).decode()
+            download_href = f"""
+            <a download="footfit_recommendation.txt" href="data:text/plain;base64,{b64}"
+               style="background-color:#ff4da6; color:white; padding:10px 14px;
+                      border-radius:8px; text-decoration:none; font-weight:bold;
+                      display:inline-block;">
+               📄 Download Recommendation (txt)
+            </a>
+            """
+            st.markdown(download_href, unsafe_allow_html=True)
+
+        with rec_col2:
+            st.subheader("👟 Virtual Shoe Wall")
+            sample_map = {
+                "Running shoes": ["running1.png", "running2.png"],
+                "Cross-training shoes": ["cross1.png", "cross2.png"],
+                "Casual/fashion sneakers": ["casual1.png", "casual2.png"],
+                "Sandals or slippers": ["sandal1.png", "sandal2.png"]
+            }
+            imgs = sample_map.get(footwear_pref, [])
+            html_images = "<div style='display:flex; flex-wrap:wrap;'>"
+            for im in imgs:
+                p = os.path.join(IMAGE_DIR, im)
+                if os.path.exists(p):
+                    html_images += f"<img src='{p}' width='110' style='margin:6px; border-radius:8px;'/>"
+            html_images += "</div>"
+            st.markdown(html_images, unsafe_allow_html=True)
+
+        st.checkbox("🔊 *Read recommendation aloud*", key="read_aloud")
+        if st.session_state.get("read_aloud", False):
+            speak_text(f"I recommend {brand}. Material: {material}. {justification}")
+
+        if st.button("← Back", key="back_to_step2"):
+            st.session_state.step = 2
+
 
 
 
