@@ -431,53 +431,35 @@ elif st.session_state.step == 3:
     st.markdown("---")
 
     rec_col1, rec_col2 = st.columns([2,1])
-    with col_a1:
-        if st.button("Analyze", key="analyze_btn"):
-            st.session_state.analyze_clicked = True
-    with col_a3:
-        if st.button("🔁 Start Over", key="start_over"):
-            st.session_state.step = 1
-            st.session_state.inputs = {}
-            st.session_state.foot_type = "Normal Arch"
-            st.session_state.footwear_pref = "Running shoes"
-            st.session_state.analyze_clicked = False
+    with rec_col1:
+        st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
+        st.write(f"💬 {justification}")
 
-    brand, material, justification = recommend(
-        foot_type, weight_group, activity_label, footwear_pref, age_group, gender
-    )
-
-    if st.session_state.analyze_clicked:
-        gif_path = os.path.join(IMAGE_DIR, "walking.gif")
-        if os.path.exists(gif_path):
-            st.markdown(
-                f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
-                unsafe_allow_html=True,
-            )
-
-    # ✅ Yellow pastel Tip of the Day box
-    tips = [
-        "Stretch your calves daily to reduce heel strain.",
-        "Replace running shoes every 500–800 km.",
-        "Use orthotic insoles when experiencing arch pain.",
-        "Air-dry shoes after workouts to prevent odor and damage.",
-        "Perform ankle rotations to strengthen stabilizers."
-    ]
-    tip_text = random.choice(tips)
-    st.markdown(
-        f"""
-        <div style="
-            background-color:#fff9c4;
-            border-left:6px solid #ffd54f;
-            padding:10px 14px;
-            border-radius:8px;
-            margin-top:8px;
-            font-weight:600;
-            color:#333;">
-            💡 Tip of the Day: {tip_text}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        # ✅ Yellow pastel Tip of the Day box
+        tips = [
+            "Stretch your calves daily to reduce heel strain.",
+            "Replace running shoes every 500–800 km.",
+            "Use orthotic insoles when experiencing arch pain.",
+            "Air-dry shoes after workouts to prevent odor and damage.",
+            "Perform ankle rotations to strengthen stabilizers."
+        ]
+        tip_text = random.choice(tips)
+        st.markdown(
+            f"""
+            <div style="
+                background-color:#fff9c4;
+                border-left:6px solid #ffd54f;
+                padding:10px 14px;
+                border-radius:8px;
+                margin-top:8px;
+                font-weight:600;
+                color:#333;">
+                💡 Tip of the Day: {tip_text}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         summary_text = textwrap.dedent(f"""
         FootFit Analyzer - Recommendation
@@ -529,15 +511,3 @@ elif st.session_state.step == 3:
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
-
-
-   
-
-
-
-
-
-
-
-
-
