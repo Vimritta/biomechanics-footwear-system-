@@ -6,7 +6,15 @@ import random
 import textwrap
 import base64  # added for pink download button
 import html as html_mod
-import json  # for safe JS string encoding
+import json
+import tempfile
+
+# Try to import gTTS for server-side TTS fallback (recommended).
+try:
+    from gtts import gTTS
+    GTTS_AVAILABLE = True
+except Exception:
+    GTTS_AVAILABLE = False
 
 # ---------------------------
 # Config
@@ -26,11 +34,9 @@ def load_image(name):
         pass
     return None
 
-def speak_text(text, lang="en-US"):
+def speak_browser(text, lang="en-US"):
     """
-    Safely use browser SpeechSynthesis via Streamlit HTML injection.
-    text: string to speak
-    lang: BCP-47 language tag like 'en-US', 'si-LK', 'ta-IN'
+    Browser-side TTS using SpeechSynthesis (fallback). Uses json.dumps to safely embed text.
     """
     safe_text = json.dumps(text)
     safe_lang = json.dumps(lang)
@@ -49,11 +55,50 @@ def speak_text(text, lang="en-US"):
     }})();
     </script>
     """
-    # small height so it doesn't take space
     st.components.v1.html(html, height=10)
 
+def speak_server_gtts(text, lang_code):
+    """
+    Server-side TTS using gTTS -> saves MP3 to a temp file and returns the path.
+    Requires gTTS installed. Returns path or None on failure.
+    """
+    try:
+        t = gTTS(text=text, lang=lang_code)
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+        tmp.close()
+        t.save(tmp.name)
+        return tmp.name
+    except Exception as e:
+        # fail silently to allow fallback
+        print("gTTS error:", e)
+        return None
+
+def speak_text_reliable(text, lang_tag):
+    """
+    Primary attempt: server-side gTTS (if available). Fallback: browser TTS.
+    lang_tag: BCP-47 like 'en-US' or gTTS style 'en'/'si'/'ta' depending on path.
+    We'll accept a tuple: (gtts_code, browser_code)
+    """
+    # lang_tag can be a tuple or str. Normalize:
+    if isinstance(lang_tag, tuple):
+        gtts_code, browser_code = lang_tag
+    else:
+        gtts_code, browser_code = (lang_tag, lang_tag)
+
+    if GTTS_AVAILABLE and gtts_code:
+        mp3_path = speak_server_gtts(text, gtts_code)
+        if mp3_path:
+            # play via Streamlit audio
+            try:
+                st.audio(mp3_path, format="audio/mp3")
+                return
+            except Exception:
+                pass
+    # fallback to browser
+    speak_browser(text, browser_code)
+
 # ---------------------------
-# Recommender logic
+# Recommender logic (unchanged)
 # ---------------------------
 def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gender):
     brands = {
@@ -104,72 +149,29 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
     return brand, material, justification
 
 # ---------------------------
-# Themes
+# Themes (unchanged)
 # ---------------------------
 def set_white_theme():
-    """White theme + white dropdowns + light pastel violet navigation buttons"""
     css = """
     <style>
     .stApp { background-color: white; color: black; }
-
-    /* General text color */
     .stMarkdown, .stText, .stSelectbox, .stRadio, label, div, p, h1, h2, h3, h4, h5, h6 {
         color: black !important;
     }
-
-    /* Dropdowns: white background and white open list */
-    div[data-baseweb="select"] {
-        background-color: white !important;
-        color: black !important;
-    }
-    div[data-baseweb="select"] span {
-        color: black !important;
-    }
-    div[data-baseweb="select"] div {
-        background-color: white !important;
-        color: black !important;
-    }
-    ul, li {
-        background-color: white !important;
-        color: black !important;
-    }
-    li:hover {
-        background-color: #f0f0f0 !important;
-        color: black !important;
-    }
-
-    select, textarea, input {
-        background-color: white !important;
-        color: black !important;
-        border: 1px solid #ccc !important;
-        border-radius: 6px;
-        padding: 6px;
-    }
-
-    /* Navigation buttons (Next, Back) — light pastel violet */
-    .stButton>button {
-        background-color: #d9c2f0 !important;
-        color: black !important;
-        border: 1px solid #b495d6 !important;
-        border-radius: 6px;
-        font-weight: 600 !important;
-    }
-    .stButton>button:hover {
-        background-color: #cbb3eb !important;
-    }
-
-    /* Stronger selector for checkbox label to ensure orange colour */
-    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {
-        color: orange !important;
-        font-weight: bold !important;
-        opacity: 1 !important;
-    }
+    div[data-baseweb="select"] { background-color: white !important; color: black !important; }
+    div[data-baseweb="select"] span { color: black !important; }
+    div[data-baseweb="select"] div { background-color: white !important; color: black !important; }
+    ul, li { background-color: white !important; color: black !important; }
+    li:hover { background-color: #f0f0f0 !important; color: black !important; }
+    select, textarea, input { background-color: white !important; color: black !important; border: 1px solid #ccc !important; border-radius: 6px; padding: 6px; }
+    .stButton>button { background-color: #d9c2f0 !important; color: black !important; border: 1px solid #b495d6 !important; border-radius: 6px; font-weight: 600 !important; }
+    .stButton>button:hover { background-color: #cbb3eb !important; }
+    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] { color: orange !important; font-weight: bold !important; opacity: 1 !important; }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 def set_activity_theme(activity_key):
-    """Activity-based theme (Step 3)"""
     if activity_key == "Low":
         color = "#d8ecff"; accent = "#3478b6"
     elif activity_key == "Moderate":
@@ -180,61 +182,19 @@ def set_activity_theme(activity_key):
     css = f"""
     <style>
     .stApp {{ background: {color}; color: #111 !important; }}
-
-    .summary-card {{
-        background: white; border-radius: 10px;
-        padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        font-weight: 600; color: #111;
-    }}
-    .highlight-box {{
-        border-left: 6px solid {accent};
-        padding:12px; border-radius:8px;
-        background: rgba(255,255,255,0.6);
-        font-weight: 600; color: #111;
-    }}
-
-    /* Recommended shoe & material boxes */
-    .rec-shoe {{
-        background-color: #b8f5c1 !important; /* pastel green */
-        color: #000 !important;
-        font-weight: bold;
-        font-size: 1.2em;
-        border-radius: 8px;
-        padding: 10px;
-    }}
-    .rec-material {{
-        background-color: #cfe9ff !important; /* pastel blue */
-        color: #000 !important;
-        font-weight: bold;
-        font-size: 1.1em;
-        border-radius: 8px;
-        padding: 10px;
-    }}
-
-    /* Buttons — pastel violet */
-    .stButton>button {{
-        background-color: #d9c2f0 !important;
-        color: black !important;
-        border: 1px solid #b495d6 !important;
-        border-radius: 6px;
-        font-weight: 600 !important;
-    }}
-    .stButton>button:hover {{
-        background-color: #cbb3eb !important;
-    }}
-
-    /* Stronger selector for checkbox label to ensure orange colour */
-    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {{
-        color: orange !important;
-        font-weight: bold !important;
-        opacity: 1 !important;
-    }}
+    .summary-card {{ background: white; border-radius: 10px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); font-weight: 600; color: #111; }}
+    .highlight-box {{ border-left: 6px solid {accent}; padding:12px; border-radius:8px; background: rgba(255,255,255,0.6); font-weight: 600; color: #111; }}
+    .rec-shoe {{ background-color: #b8f5c1 !important; color: #000 !important; font-weight: bold; font-size: 1.2em; border-radius: 8px; padding: 10px; }}
+    .rec-material {{ background-color: #cfe9ff !important; color: #000 !important; font-weight: bold; font-size: 1.1em; border-radius: 8px; padding: 10px; }}
+    .stButton>button {{ background-color: #d9c2f0 !important; color: black !important; border: 1px solid #b495d6 !important; border-radius: 6px; font-weight: 600 !important; }}
+    .stButton>button:hover {{ background-color: #cbb3eb !important; }}
+    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {{ color: orange !important; font-weight: bold !important; opacity: 1 !important; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 # ---------------------------
-# Session initialization
+# Session initialization (unchanged)
 # ---------------------------
 if 'step' not in st.session_state:
     st.session_state.step = 1
@@ -248,7 +208,7 @@ if 'footwear_pref' not in st.session_state:
     st.session_state.footwear_pref = "Running shoes"
 
 # ---------------------------
-# Header
+# Header (unchanged)
 # ---------------------------
 col1, col2 = st.columns([1, 8])
 with col1:
@@ -263,7 +223,7 @@ st.write("A biomechanics-informed recommender that suggests shoe brand, material
 st.markdown("---")
 
 # ---------------------------
-# STEP 1 — Personal Info
+# STEP 1 — Personal Info (unchanged)
 # ---------------------------
 if st.session_state.step == 1:
     set_white_theme()
@@ -284,7 +244,7 @@ if st.session_state.step == 1:
             st.session_state.step = 2
 
 # ---------------------------
-# STEP 2 — Foot & Activity
+# STEP 2 — Foot & Activity (unchanged)
 # ---------------------------
 elif st.session_state.step == 2:
     set_white_theme()
@@ -332,7 +292,7 @@ elif st.session_state.step == 2:
             st.session_state.step = 3
 
 # ---------------------------
-# STEP 3 — Recommendation
+# STEP 3 — Recommendation (modified to add voice controls only)
 # ---------------------------
 elif st.session_state.step == 3:
     st.header("Step 3 — Recommendation & Biomechanics Summary")
@@ -343,18 +303,17 @@ elif st.session_state.step == 3:
     st.markdown("### 🗣️ Voice Assistant Settings")
     c1, c2 = st.columns([1, 1])
     with c1:
-        # toggle via checkbox (works reliably)
         voice_enabled = st.checkbox("Enable Voice Assistant", value=True)
     with c2:
         language = st.selectbox("Language", ["English 🇬🇧", "Sinhala 🇱🇰", "Tamil 🇮🇳"], index=0)
 
-    # Map language selection to speech.lang codes
+    # Map language selection to (gTTS code, browser code)
     lang_map = {
-        "English 🇬🇧": "en-US",
-        "Sinhala 🇱🇰": "si-LK",  # note: browser support may vary for Sinhala
-        "Tamil 🇮🇳": "ta-IN"
+        "English 🇬🇧": ("en", "en-US"),
+        "Sinhala 🇱🇰": ("si", "si-LK"),  # gTTS 'si' may be available; browser code may or may not be supported by OS
+        "Tamil 🇮🇳": ("ta", "ta-IN"),
     }
-    selected_lang_code = lang_map.get(language, "en-US")
+    selected_codes = lang_map.get(language, ("en", "en-US"))
 
     def get_val(key, default):
         return st.session_state.inputs.get(key, st.session_state.get(key, default))
@@ -392,9 +351,11 @@ elif st.session_state.step == 3:
                 f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
                 unsafe_allow_html=True,
             )
-        # only announce Analyze if voice is enabled
+        # announce Analyze (only if voice enabled)
         if voice_enabled:
-            speak_text(f"Recommendation ready. {brand} recommended.", lang=selected_lang_code)
+            # speak using server gTTS if available, else browser TTS
+            announce = f"Recommendation ready. {brand} recommended."
+            speak_text_reliable(announce, selected_codes)
 
     summary_md = f"""
     <div class="summary-card">
@@ -504,13 +465,16 @@ elif st.session_state.step == 3:
     if voice_enabled:
         st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
         if st.session_state.get("read_aloud", False):
-            # speak in chosen language
-            speak_text(f"I recommend {brand}. Material: {material}. {justification}", lang=selected_lang_code)
+            # Build full text to speak
+            speak_payload = f"I recommend {brand}. Material: {material}. Justification: {justification}. Tip: {tip_text}"
+            # selected_codes is (gtts_code, browser_code)
+            speak_text_reliable(speak_payload, selected_codes)
     else:
         st.info("🔇 Voice assistant is turned off.")
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
+
 
 
 
