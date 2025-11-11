@@ -2,4 +2,3 @@ streamlit
 pandas
 Pillow
 numpy
-pip install gTTS
