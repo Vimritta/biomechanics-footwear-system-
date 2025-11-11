@@ -5,66 +5,7 @@ from PIL import Image
 import random
 import textwrap
 import base64  # added for pink download button
-
-# ---------------------------
-# Config
-# ---------------------------
-st.set_page_config(page_title="FootFit Analyzer", layout="wide", page_icon="👟")
-IMAGE_DIR = "images"
-
-# ---------------------------
-# Helpers
-# ---------------------------
-def load_image(name):
-    path = os.path.join(IMAGE_DIR, name)
-    try:
-        if os.path.exists(path):
-            return Image.open(path)
-    except Exception:
-        pass
-    return None
-
-def speak_text(text):
-    html = f"""
-    <script>
-    const msg = new SpeechSynthesisUtterance({repr…
-[11:16 PM, 11/10/2025] Vimritta: # app.py — FootFit Analyzer (light pastel violet navigation + white dropdowns + pastel rec boxes)
-import streamlit as st
-import os
-from PIL import Image
-import random
-import textwrap
-import base64  # added for pink download button
-
-# ---------------------------
-# Config
-# ---------------------------
-st.set_page_config(page_title="FootFit Analyzer", layout="wide", page_icon="👟")
-IMAGE_DIR = "images"
-
-# ---------------------------
-# Helpers
-# ---------------------------
-def load_image(name):
-    path = os.path.join(IMAGE_DIR, name)
-    try:
-        if os.path.exists(path):
-            return Image.open(path)
-    except Exception:
-        pass
-    return None
-
-def speak_text(text):
-    html = f"""
-    <script>
-    const msg = new SpeechSynthesisUtterance({repr…
-[11:17 PM, 11/10/2025] Vimritta: # app.py — FootFit Analyzer (light pastel violet navigation + white dropdowns + pastel rec boxes)
-import streamlit as st
-import os
-from PIL import Image
-import random
-import textwrap
-import base64  # added for pink download button
+import html as html_mod
 
 # ---------------------------
 # Config
@@ -434,7 +375,25 @@ elif st.session_state.step == 3:
     with rec_col1:
         st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
-        st.write(f"💬 {justification}")
+
+        # 🟤 Brown pastel Justification box (escaped for safety)
+        justification_safe = html_mod.escape(justification)
+        st.markdown(
+            (
+                "<div style=\""
+                "background-color:#d2b48c;"
+                "border-left:6px solid #8b6f47;"
+                "padding:10px 14px;"
+                "border-radius:8px;"
+                "margin-top:8px;"
+                "font-weight:600;"
+                "color:#222;"
+                "\">"
+                "💬 Justification: " + justification_safe +
+                "</div>"
+            ),
+            unsafe_allow_html=True,
+        )
 
         # ✅ Yellow pastel Tip of the Day box
         tips = [
@@ -511,3 +470,4 @@ elif st.session_state.step == 3:
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
+
