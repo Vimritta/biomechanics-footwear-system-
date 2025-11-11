@@ -4,12 +4,12 @@ import os
 from PIL import Image
 import random
 import textwrap
-import base64  # added for pink download button
+import base64
 import html as html_mod
 import json
 import tempfile
 
-# Try to import gTTS for server-side TTS fallback (recommended).
+# Try to import gTTS for server-side TTS fallback (recommended)
 try:
     from gtts import gTTS
     GTTS_AVAILABLE = True
@@ -35,9 +35,7 @@ def load_image(name):
     return None
 
 def speak_browser(text, lang="en-US"):
-    """
-    Browser-side TTS using SpeechSynthesis (fallback). Uses json.dumps to safely embed text.
-    """
+    """Browser-side TTS using SpeechSynthesis (fallback)."""
     safe_text = json.dumps(text)
     safe_lang = json.dumps(lang)
     html = f"""
@@ -47,21 +45,16 @@ def speak_browser(text, lang="en-US"):
             const msg = new SpeechSynthesisUtterance({safe_text});
             msg.rate = 1.0;
             msg.lang = {safe_lang};
-            try {{ window.speechSynthesis.cancel(); }} catch(e) {{ }}
+            try {{ window.speechSynthesis.cancel(); }} catch(e) {{}}
             window.speechSynthesis.speak(msg);
-        }} catch (e) {{
-            console.log("Speech error:", e);
-        }}
+        }} catch (e) {{ console.log("Speech error:", e); }}
     }})();
     </script>
     """
     st.components.v1.html(html, height=10)
 
 def speak_server_gtts(text, lang_code):
-    """
-    Server-side TTS using gTTS -> saves MP3 to a temp file and returns the path.
-    Requires gTTS installed. Returns path or None on failure.
-    """
+    """Server-side TTS using gTTS -> saves MP3 to temp file."""
     try:
         t = gTTS(text=text, lang=lang_code)
         tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
@@ -69,17 +62,11 @@ def speak_server_gtts(text, lang_code):
         t.save(tmp.name)
         return tmp.name
     except Exception as e:
-        # fail silently to allow fallback
         print("gTTS error:", e)
         return None
 
 def speak_text_reliable(text, lang_tag):
-    """
-    Primary attempt: server-side gTTS (if available). Fallback: browser TTS.
-    lang_tag: BCP-47 like 'en-US' or gTTS style 'en'/'si'/'ta' depending on path.
-    We'll accept a tuple: (gtts_code, browser_code)
-    """
-    # lang_tag can be a tuple or str. Normalize:
+    """Primary attempt: server-side gTTS. Fallback: browser TTS."""
     if isinstance(lang_tag, tuple):
         gtts_code, browser_code = lang_tag
     else:
@@ -88,17 +75,15 @@ def speak_text_reliable(text, lang_tag):
     if GTTS_AVAILABLE and gtts_code:
         mp3_path = speak_server_gtts(text, gtts_code)
         if mp3_path:
-            # play via Streamlit audio
             try:
                 st.audio(mp3_path, format="audio/mp3")
                 return
             except Exception:
                 pass
-    # fallback to browser
     speak_browser(text, browser_code)
 
 # ---------------------------
-# Recommender logic (unchanged)
+# Recommender logic
 # ---------------------------
 def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gender):
     brands = {
@@ -109,25 +94,26 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
     }
     brand = random.choice(brands.get(footwear_pref, ["Generic FootFit Shoe"]))
 
+    # Material and justification logic
     if footwear_pref == "Running shoes":
         if foot_type == "Flat Arch":
             material = "Dual-density EVA midsole + Arch-stability foam"
-            justification = "Justification: Dual-density EVA supports the medial arch and prevents over-pronation while cushioning repeated impact."
+            justification = "Dual-density EVA supports the medial arch and prevents over-pronation while cushioning repeated impact."
         elif foot_type == "High Arch":
             material = "EVA midsole + Responsive gel insert"
-            justification = "Justification: Additional shock absorption and a gel insert disperse high-pressure points common with high arches."
+            justification = "Additional shock absorption and a gel insert disperse high-pressure points common with high arches."
         else:
             material = "Lightweight mesh upper + Balanced foam midsole"
-            justification = "Justification: Breathable upper and balanced cushioning suit neutral-footed runners."
+            justification = "Breathable upper and balanced cushioning suit neutral-footed runners."
     elif footwear_pref == "Cross-training shoes":
         material = "Dense EVA + Reinforced lateral upper + TPU heel counter"
-        justification = "Justification: Dense EVA and reinforced upper provide lateral stability for multi-directional movements."
+        justification = "Dense EVA and reinforced upper provide lateral stability for multi-directional movements."
     elif footwear_pref == "Casual/fashion sneakers":
         material = "Soft foam midsole + Textile upper"
-        justification = "Justification: Comfortable for daily wear with breathable textile uppers and soft foam for casual cushioning."
+        justification = "Comfortable for daily wear with breathable textile uppers and soft foam for casual cushioning."
     else:
         material = "Soft EVA footbed + contoured cork or foam support"
-        justification = "Justification: Soft footbed for comfort and a contoured profile to support arches during light activity."
+        justification = "Soft footbed for comfort and a contoured profile to support arches during light activity."
 
     if weight_group == "Over 90 kg":
         material = material.replace("EVA", "Thick EVA").replace("Dense EVA", "High-density EVA").replace("soft foam", "high-density foam")
@@ -142,59 +128,12 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 
     if gender == "Female":
         justification = "Designed for narrower heels and a more contoured fit. " + justification
-
     if "Under 18" in age_group:
         brand = brand + " (Youth Edition)"
-
     return brand, material, justification
 
 # ---------------------------
-# Themes (unchanged)
-# ---------------------------
-def set_white_theme():
-    css = """
-    <style>
-    .stApp { background-color: white; color: black; }
-    .stMarkdown, .stText, .stSelectbox, .stRadio, label, div, p, h1, h2, h3, h4, h5, h6 {
-        color: black !important;
-    }
-    div[data-baseweb="select"] { background-color: white !important; color: black !important; }
-    div[data-baseweb="select"] span { color: black !important; }
-    div[data-baseweb="select"] div { background-color: white !important; color: black !important; }
-    ul, li { background-color: white !important; color: black !important; }
-    li:hover { background-color: #f0f0f0 !important; color: black !important; }
-    select, textarea, input { background-color: white !important; color: black !important; border: 1px solid #ccc !important; border-radius: 6px; padding: 6px; }
-    .stButton>button { background-color: #d9c2f0 !important; color: black !important; border: 1px solid #b495d6 !important; border-radius: 6px; font-weight: 600 !important; }
-    .stButton>button:hover { background-color: #cbb3eb !important; }
-    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] { color: orange !important; font-weight: bold !important; opacity: 1 !important; }
-    </style>
-    """
-    st.markdown(css, unsafe_allow_html=True)
-
-def set_activity_theme(activity_key):
-    if activity_key == "Low":
-        color = "#d8ecff"; accent = "#3478b6"
-    elif activity_key == "Moderate":
-        color = "#e8f9e9"; accent = "#2e8b57"
-    else:
-        color = "#ffe9d6"; accent = "#e55300"
-
-    css = f"""
-    <style>
-    .stApp {{ background: {color}; color: #111 !important; }}
-    .summary-card {{ background: white; border-radius: 10px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); font-weight: 600; color: #111; }}
-    .highlight-box {{ border-left: 6px solid {accent}; padding:12px; border-radius:8px; background: rgba(255,255,255,0.6); font-weight: 600; color: #111; }}
-    .rec-shoe {{ background-color: #b8f5c1 !important; color: #000 !important; font-weight: bold; font-size: 1.2em; border-radius: 8px; padding: 10px; }}
-    .rec-material {{ background-color: #cfe9ff !important; color: #000 !important; font-weight: bold; font-size: 1.1em; border-radius: 8px; padding: 10px; }}
-    .stButton>button {{ background-color: #d9c2f0 !important; color: black !important; border: 1px solid #b495d6 !important; border-radius: 6px; font-weight: 600 !important; }}
-    .stButton>button:hover {{ background-color: #cbb3eb !important; }}
-    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {{ color: orange !important; font-weight: bold !important; opacity: 1 !important; }}
-    </style>
-    """
-    st.markdown(css, unsafe_allow_html=True)
-
-# ---------------------------
-# Session initialization (unchanged)
+# Session initialization
 # ---------------------------
 if 'step' not in st.session_state:
     st.session_state.step = 1
@@ -208,7 +147,7 @@ if 'footwear_pref' not in st.session_state:
     st.session_state.footwear_pref = "Running shoes"
 
 # ---------------------------
-# Header (unchanged)
+# Header
 # ---------------------------
 col1, col2 = st.columns([1, 8])
 with col1:
@@ -223,16 +162,13 @@ st.write("A biomechanics-informed recommender that suggests shoe brand, material
 st.markdown("---")
 
 # ---------------------------
-# STEP 1 — Personal Info (unchanged)
+# STEP 1 — Personal Info
 # ---------------------------
 if st.session_state.step == 1:
-    set_white_theme()
     st.header("Step 1 — Personal Info")
-
     age_label = st.selectbox("Select your Age Group", ["Under 18", "18–25", "26–35", "36–50", "51–65", "Over 65"], index=1)
     gender_label = st.selectbox("Select Gender", ["Male", "Female"], index=0)
     weight_label = st.selectbox("Select Weight Category", ["Under 50 kg", "50–70 kg", "71–90 kg", "Over 90 kg"], index=1)
-
     next_col1, next_col2 = st.columns([1,1])
     with next_col2:
         if st.button("Next →", key="to_step2"):
@@ -244,21 +180,17 @@ if st.session_state.step == 1:
             st.session_state.step = 2
 
 # ---------------------------
-# STEP 2 — Foot & Activity (unchanged)
+# STEP 2 — Foot & Activity
 # ---------------------------
 elif st.session_state.step == 2:
-    set_white_theme()
     st.header("Step 2 — Foot & Activity Details")
-
     activity_label = st.selectbox(
         "Select your Daily Activity Level",
         ["Low (mostly sitting)", "Moderate (walking/standing sometimes)", "High (frequent walking/running)"],
         index=1
     )
     st.session_state.inputs["activity_label"] = activity_label
-    st.session_state.inputs["activity_key"] = (
-        "Low" if "Low" in activity_label else ("Moderate" if "Moderate" in activity_label else "High")
-    )
+    st.session_state.inputs["activity_key"] = ("Low" if "Low" in activity_label else ("Moderate" if "Moderate" in activity_label else "High"))
 
     st.subheader("👣 Foot Type — choose one")
     foot_options = [("Flat Arch","flat.png"), ("Normal Arch","normal.png"), ("High Arch","high_arch.png")]
@@ -272,15 +204,13 @@ elif st.session_state.step == 2:
             if st.button(label, key=f"ftbtn_{label}"):
                 st.session_state.foot_type = label
                 st.session_state.inputs["foot_type"] = label
-
-    st.write(f"👉 Currently selected foot type: {st.session_state.foot_type}")
+            st.write(f"👉 Currently selected foot type: {st.session_state.foot_type}")
 
     st.subheader("👟 Type of footwear you prefer")
     options = ["Running shoes", "Cross-training shoes", "Casual/fashion sneakers", "Sandals or slippers"]
     new_pref = st.selectbox("Select preferred footwear", options, index=options.index(st.session_state.footwear_pref))
     st.session_state.footwear_pref = new_pref
     st.session_state.inputs["footwear_pref"] = new_pref
-
     st.write(f"👉 Currently selected footwear: {st.session_state.footwear_pref}")
 
     back_col, next_col = st.columns([1,1])
@@ -292,21 +222,12 @@ elif st.session_state.step == 2:
             st.session_state.step = 3
 
 # ---------------------------
-# STEP 3 — Recommendation
+# STEP 3 — Recommendation & Voice Assistant
 # ---------------------------
 elif st.session_state.step == 3:
     st.header("Step 3 — Recommendation & Biomechanics Summary")
 
-    # Try import gTTS once (safe)
-    try:
-        from gtts import gTTS
-        GTTS_AVAILABLE = True
-    except Exception:
-        GTTS_AVAILABLE = False
-
-    import json
-    import tempfile
-
+    # Get inputs
     def get_val(key, default):
         return st.session_state.inputs.get(key, st.session_state.get(key, default))
 
@@ -318,9 +239,7 @@ elif st.session_state.step == 3:
     foot_type = get_val("foot_type", "Normal Arch")
     footwear_pref = get_val("footwear_pref", "Running shoes")
 
-    set_activity_theme(activity_key)
-
-    # Voice assistant UI (toggle + language)
+    # Voice assistant UI
     st.markdown("### 🗣️ Voice Assistant Settings")
     c1, c2 = st.columns([1, 1])
     with c1:
@@ -336,119 +255,36 @@ elif st.session_state.step == 3:
     }
     gtts_code, browser_code = lang_map.get(language, ("en", "en-US"))
 
-    col_a1, col_a2, col_a3 = st.columns([1,1,2])
-    with col_a1:
-        if st.button("Analyze", key="analyze_btn"):
-            st.session_state.analyze_clicked = True
-    with col_a3:
-        if st.button("🔁 Start Over", key="start_over"):
-            st.session_state.step = 1
-            st.session_state.inputs = {}
-            st.session_state.foot_type = "Normal Arch"
-            st.session_state.footwear_pref = "Running shoes"
-            st.session_state.analyze_clicked = False
-
+    # Recommendation
     brand, material, justification = recommend(
         foot_type, weight_group, activity_label, footwear_pref, age_group, gender
     )
 
-    # Helper: server-side gTTS generation and play
-    def play_with_gtts(text, lang_code):
-        """
-        Create mp3 with gTTS and play via st.audio. Returns True if played.
-        """
-        if not GTTS_AVAILABLE:
-            return False
-        try:
-            tts = gTTS(text=text, lang=lang_code)
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
-            tmp.close()
-            tts.save(tmp.name)
-            st.audio(tmp.name, format="audio/mp3")
-            return True
-        except Exception as e:
-            # fail silently and allow fallback to browser TTS
-            st.warning("gTTS failed: falling back to browser TTS.")
-            print("gTTS error:", e)
-            return False
-
-    # Helper: browser-side TTS fallback (best-effort)
-    def play_with_browser_tts(text, browser_lang):
-        safe_text = json.dumps(text)
-        safe_lang = json.dumps(browser_lang)
-        html = f"""
-        <script>
-        (function(){{
-            try {{
-                const msg = new SpeechSynthesisUtterance({safe_text});
-                msg.lang = {safe_lang};
-                msg.rate = 1.0;
-                try {{ window.speechSynthesis.cancel(); }} catch(e){{}}
-                window.speechSynthesis.speak(msg);
-            }} catch(e) {{
-                console.log('Browser TTS error', e);
-            }}
-        }})();
-        </script>
-        """
-        st.components.v1.html(html, height=10)
-
-    # If analyze clicked: show gif and optionally announce
-    if st.session_state.analyze_clicked:
-        gif_path = os.path.join(IMAGE_DIR, "walking.gif")
-        if os.path.exists(gif_path):
-            st.markdown(
-                f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
-                unsafe_allow_html=True,
-            )
-
-        if voice_enabled:
-            announce_text = f"Recommendation ready. {brand} recommended."
-            # Try server gTTS first (reliable for Sinhala/Tamil). If not available, use browser TTS.
-            played = False
-            if gtts_code and GTTS_AVAILABLE:
-                played = play_with_gtts(announce_text, gtts_code)
-            if not played:
-                play_with_browser_tts(announce_text, browser_code)
-        # ensure analyze_clicked persists if needed; you may reset it as you like
-
-    # Summary card display
+    # Display summary card
     summary_md = f"""
     <div class="summary-card">
-      <h3>🧠 <b>Biomechanics Summary</b></h3>
-      <p class="highlight-box">
-        👤 <b>Age:</b> {age_group} &nbsp; 🚻 <b>Gender:</b> {gender} <br/>
-        ⚖️ <b>Weight:</b> {weight_group} &nbsp; 🏃 <b>Activity:</b> {activity_label} <br/>
-        🦶 <b>Foot Type:</b> {foot_type} &nbsp; 👟 <b>Preference:</b> {footwear_pref}
-      </p>
+        <h3>🧠 <b>Biomechanics Summary</b></h3>
+        <p class="highlight-box">
+            👤 <b>Age:</b> {age_group} &nbsp; 🚻 <b>Gender:</b> {gender} <br/>
+            ⚖️ <b>Weight:</b> {weight_group} &nbsp; 🏃 <b>Activity:</b> {activity_label} <br/>
+            🦶 <b>Foot Type:</b> {foot_type} &nbsp; 👟 <b>Preference:</b> {footwear_pref}
+        </p>
     </div>
     """
     st.markdown(summary_md, unsafe_allow_html=True)
     st.markdown("---")
 
-    # Recommendation boxes (unchanged look)
+    # Recommendation boxes
     rec_col1, rec_col2 = st.columns([2,1])
     with rec_col1:
         st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
-
-        # 🟤 Brown pastel Justification box (escaped for safety)
         justification_safe = html_mod.escape(justification)
         st.markdown(
-            (
-                "<div style=\""
-                "background-color:#d2b48c;"
-                "border-left:6px solid #8b6f47;"
-                "padding:10px 14px;"
-                "border-radius:8px;"
-                "margin-top:8px;"
-                "font-weight:600;"
-                "color:#222;"
-                "\">"
-                "💬 Justification: " + justification_safe +
-                "</div>"
-            ),
-            unsafe_allow_html=True,
+            (f"<div style='background-color:#d2b48c; border-left:6px solid #8b6f47; "
+             f"padding:10px 14px; border-radius:8px; margin-top:8px; font-weight:600; color:#222;'>"
+             f"💬 Justification: {justification_safe}</div>"),
+            unsafe_allow_html=True
         )
 
         # Tip of the day
@@ -460,21 +296,10 @@ elif st.session_state.step == 3:
             "Perform ankle rotations to strengthen stabilizers."
         ]
         tip_text = random.choice(tips)
-        st.markdown(
-            f"""
-            <div style="
-                background-color:#fff9c4;
-                border-left:6px solid #ffd54f;
-                padding:10px 14px;
-                border-radius:8px;
-                margin-top:8px;
-                font-weight:600;
-                color:#333;">
-                💡 Tip of the Day: {tip_text}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f"""
+        <div style="background-color:#fff9c4; border-left:6px solid #ffd54f; padding:10px 14px; border-radius:8px; margin-top:8px; font-weight:600; color:#333;">
+        💡 Tip of the Day: {tip_text}</div>
+        """, unsafe_allow_html=True)
 
         # Downloadable summary
         summary_text = textwrap.dedent(f"""
@@ -486,20 +311,15 @@ elif st.session_state.step == 3:
         Activity level: {activity_label}
         Foot type: {foot_type}
         Preferred footwear: {footwear_pref}
-
         Recommended Shoe: {brand}
         Material: {material}
         Justification: {justification}
         Tip: {tip_text}
         """)
-
         b64 = base64.b64encode(summary_text.encode()).decode()
         download_href = f"""
-        <a download="footfit_recommendation.txt" href="data:text/plain;base64,{b64}"
-           style="background-color:#ff4da6; color:white; padding:10px 14px; border-radius:8px;
-                  text-decoration:none; font-weight:bold; display:inline-block;">
-           📄 Download Recommendation (txt)
-        </a>
+        <a download="footfit_recommendation.txt" href="data:text/plain;base64,{b64}" style="background-color:#ff4da6; color:white; padding:10px 14px; border-radius:8px; text-decoration:none; font-weight:bold; display:inline-block;">
+        📄 Download Recommendation (txt) </a>
         """
         st.markdown(download_href, unsafe_allow_html=True)
 
@@ -520,24 +340,39 @@ elif st.session_state.step == 3:
         html_images += "</div>"
         st.markdown(html_images, unsafe_allow_html=True)
 
-    # Read-aloud checkbox (plays the full recommendation when clicked, respecting the selected language)
+    # ---------------------------
+    # Multi-language Read Aloud (native greeting + recommend phrase)
+    # ---------------------------
     if voice_enabled:
         if st.checkbox("🔊 Read recommendation aloud", key="read_aloud"):
-            full_text = f"I recommend {brand}. Material: {material}. Justification: {justification}. Tip: {tip_text}"
+            # Greetings and recommend phrase map
+            greeting_map = {
+                "English 🇬🇧": "",
+                "Sinhala 🇱🇰": "ආයුබෝවන්! ",
+                "Tamil 🇮🇳": "வணக்கம்! "
+            }
+            recommend_map = {
+                "English 🇬🇧": "I recommend",
+                "Sinhala 🇱🇰": "මම නිර්දේශ කරනවා",
+                "Tamil 🇮🇳": "நான் பரிந்துரைக்கிறேன்"
+            }
+            greeting = greeting_map.get(language, "")
+            recommend_phrase = recommend_map.get(language, "I recommend")
+
+            full_text = f"{greeting}{recommend_phrase} {brand}. Material: {material}. Justification: {justification}. Tip: {tip_text}"
+
             played = False
             if gtts_code and GTTS_AVAILABLE:
-                played = play_with_gtts(full_text, gtts_code)
+                played = speak_server_gtts(full_text, gtts_code)
+                if played:
+                    st.audio(played, format="audio/mp3")
             if not played:
-                play_with_browser_tts(full_text, browser_code)
-
-            # Clear the checkbox so it can be clicked again (optional UX)
+                speak_browser(full_text, browser_code)
+            
             st.session_state["read_aloud"] = False
     else:
         st.info("🔇 Voice assistant is turned off. (Enable voice for read aloud.)")
 
-    # Show note about gTTS availability
-    if not GTTS_AVAILABLE:
-        st.caption("Tip: Install `gTTS` (pip install gTTS) or add it to requirements.txt to get reliable Sinhala/Tamil playback across devices.")
-
+    # Back button
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
