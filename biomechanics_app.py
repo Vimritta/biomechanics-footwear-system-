@@ -298,22 +298,57 @@ elif st.session_state.step == 3:
     st.header("Step 3 — Recommendation & Biomechanics Summary")
 
     # ---------------------------
-    # Voice Assistant controls (added)
-    # ---------------------------
-    st.markdown("### 🗣️ Voice Assistant Settings")
-    c1, c2 = st.columns([1, 1])
-    with c1:
-        voice_enabled = st.checkbox("Enable Voice Assistant", value=True)
-    with c2:
-        language = st.selectbox("Language", ["English 🇬🇧", "Sinhala 🇱🇰", "Tamil 🇮🇳"], index=0)
+# VOICE ASSISTANT SECTION
+# ---------------------------
+from gtts import gTTS
+import io
+import base64
 
-    # Map language selection to (gTTS code, browser code)
-    lang_map = {
-        "English 🇬🇧": ("en", "en-US"),
-        "Sinhala 🇱🇰": ("si", "si-LK"),  # gTTS 'si' may be available; browser code may or may not be supported by OS
-        "Tamil 🇮🇳": ("ta", "ta-IN"),
-    }
-    selected_codes = lang_map.get(language, ("en", "en-US"))
+st.markdown("## 🗣️ Voice Assistant Settings")
+
+# Voice toggle
+voice_enabled = st.toggle("Enable Voice Assistant", value=False)
+
+# Language dropdown
+language = st.selectbox("🌐 Language", ["English", "Sinhala 🇱🇰", "Tamil 🇮🇳"])
+
+# Map to gTTS language codes
+lang_map = {
+    "English": "en",
+    "Sinhala 🇱🇰": "si",
+    "Tamil 🇮🇳": "ta"
+}
+
+selected_lang = lang_map[language]
+
+# Text to be read aloud (you can connect this with your recommendation later)
+text_to_read = """
+Recommended Shoe: Adidas Ultraboost.
+Material: Lightweight mesh upper with balanced foam midsole.
+Tip of the Day: Perform ankle rotations to strengthen stabilizers.
+"""
+
+if voice_enabled:
+    if st.button("🔊 Read Aloud"):
+        try:
+            tts = gTTS(text=text_to_read, lang=selected_lang)
+            audio_fp = io.BytesIO()
+            tts.write_to_fp(audio_fp)
+            audio_fp.seek(0)
+
+            audio_bytes = audio_fp.read()
+            audio_b64 = base64.b64encode(audio_bytes).decode()
+            audio_tag = f"""
+            <audio autoplay controls>
+                <source src="data:audio/mp3;base64,{audio_b64}" type="audio/mp3">
+            </audio>
+            """
+            st.markdown(audio_tag, unsafe_allow_html=True)
+        except Exception as e:
+            st.error(f"⚠️ Voice generation failed: {e}")
+else:
+    st.info("🔇 Voice Assistant is currently turned off.")
+
 
     def get_val(key, default):
         return st.session_state.inputs.get(key, st.session_state.get(key, default))
