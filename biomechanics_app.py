@@ -6,6 +6,7 @@ import random
 import textwrap
 import base64  # added for pink download button
 import html as html_mod
+import json  # for safe JS string encoding
 
 # ---------------------------
 # Config
@@ -25,15 +26,31 @@ def load_image(name):
         pass
     return None
 
-def speak_text(text):
+def speak_text(text, lang="en-US"):
+    """
+    Safely use browser SpeechSynthesis via Streamlit HTML injection.
+    text: string to speak
+    lang: BCP-47 language tag like 'en-US', 'si-LK', 'ta-IN'
+    """
+    safe_text = json.dumps(text)
+    safe_lang = json.dumps(lang)
     html = f"""
     <script>
-    const msg = new SpeechSynthesisUtterance({repr(text)});
-    msg.rate = 1.0;
-    window.speechSynthesis.speak(msg);
+    (function() {{
+        try {{
+            const msg = new SpeechSynthesisUtterance({safe_text});
+            msg.rate = 1.0;
+            msg.lang = {safe_lang};
+            try {{ window.speechSynthesis.cancel(); }} catch(e) {{ }}
+            window.speechSynthesis.speak(msg);
+        }} catch (e) {{
+            console.log("Speech error:", e);
+        }}
+    }})();
     </script>
     """
-    st.components.v1.html(html, height=0)
+    # small height so it doesn't take space
+    st.components.v1.html(html, height=10)
 
 # ---------------------------
 # Recommender logic
@@ -320,24 +337,24 @@ elif st.session_state.step == 2:
 elif st.session_state.step == 3:
     st.header("Step 3 — Recommendation & Biomechanics Summary")
 
-    # 🎛️ Voice Assistant Settings (added feature)
+    # ---------------------------
+    # Voice Assistant controls (added)
+    # ---------------------------
     st.markdown("### 🗣️ Voice Assistant Settings")
-    col_va1, col_va2 = st.columns([1, 1])
-    with col_va1:
-        voice_enabled = st.toggle("Enable Voice Assistant", value=True)
-    with col_va2:
-        language = st.selectbox(
-            "Language",
-            ["English 🇬🇧", "Sinhala 🇱🇰", "Tamil 🇮🇳"],
-            index=0
-        )
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        # toggle via checkbox (works reliably)
+        voice_enabled = st.checkbox("Enable Voice Assistant", value=True)
+    with c2:
+        language = st.selectbox("Language", ["English 🇬🇧", "Sinhala 🇱🇰", "Tamil 🇮🇳"], index=0)
 
-    # Map the language name to a code (for possible use later)
-    lang_code = {
-        "English 🇬🇧": "en",
-        "Sinhala 🇱🇰": "si",
-        "Tamil 🇮🇳": "ta"
-    }[language]
+    # Map language selection to speech.lang codes
+    lang_map = {
+        "English 🇬🇧": "en-US",
+        "Sinhala 🇱🇰": "si-LK",  # note: browser support may vary for Sinhala
+        "Tamil 🇮🇳": "ta-IN"
+    }
+    selected_lang_code = lang_map.get(language, "en-US")
 
     def get_val(key, default):
         return st.session_state.inputs.get(key, st.session_state.get(key, default))
@@ -375,8 +392,9 @@ elif st.session_state.step == 3:
                 f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
                 unsafe_allow_html=True,
             )
+        # only announce Analyze if voice is enabled
         if voice_enabled:
-            speak_text(f"Recommendation ready. {brand} recommended.")
+            speak_text(f"Recommendation ready. {brand} recommended.", lang=selected_lang_code)
 
     summary_md = f"""
     <div class="summary-card">
@@ -486,11 +504,13 @@ elif st.session_state.step == 3:
     if voice_enabled:
         st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
         if st.session_state.get("read_aloud", False):
-            speak_text(f"I recommend {brand}. Material: {material}. {justification}")
+            # speak in chosen language
+            speak_text(f"I recommend {brand}. Material: {material}. {justification}", lang=selected_lang_code)
     else:
         st.info("🔇 Voice assistant is turned off.")
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
+
 
 
