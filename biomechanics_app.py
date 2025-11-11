@@ -320,6 +320,25 @@ elif st.session_state.step == 2:
 elif st.session_state.step == 3:
     st.header("Step 3 — Recommendation & Biomechanics Summary")
 
+    # 🎛️ Voice Assistant Settings (added feature)
+    st.markdown("### 🗣️ Voice Assistant Settings")
+    col_va1, col_va2 = st.columns([1, 1])
+    with col_va1:
+        voice_enabled = st.toggle("Enable Voice Assistant", value=True)
+    with col_va2:
+        language = st.selectbox(
+            "Language",
+            ["English 🇬🇧", "Sinhala 🇱🇰", "Tamil 🇮🇳"],
+            index=0
+        )
+
+    # Map the language name to a code (for possible use later)
+    lang_code = {
+        "English 🇬🇧": "en",
+        "Sinhala 🇱🇰": "si",
+        "Tamil 🇮🇳": "ta"
+    }[language]
+
     def get_val(key, default):
         return st.session_state.inputs.get(key, st.session_state.get(key, default))
 
@@ -356,7 +375,8 @@ elif st.session_state.step == 3:
                 f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
                 unsafe_allow_html=True,
             )
-        speak_text(f"Recommendation ready. {brand} recommended.")
+        if voice_enabled:
+            speak_text(f"Recommendation ready. {brand} recommended.")
 
     summary_md = f"""
     <div class="summary-card">
@@ -387,8 +407,7 @@ elif st.session_state.step == 3:
                 "border-radius:8px;"
                 "margin-top:8px;"
                 "font-weight:600;"
-                "color:#222;"
-                "\">"
+                "color:#222;\">"
                 "💬 Justification: " + justification_safe +
                 "</div>"
             ),
@@ -463,11 +482,15 @@ elif st.session_state.step == 3:
         html_images += "</div>"
         st.markdown(html_images, unsafe_allow_html=True)
 
-    st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
-
-    if st.session_state.get("read_aloud", False):
-        speak_text(f"I recommend {brand}. Material: {material}. {justification}")
+    # 🔊 Read Aloud section (respects toggle)
+    if voice_enabled:
+        st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
+        if st.session_state.get("read_aloud", False):
+            speak_text(f"I recommend {brand}. Material: {material}. {justification}")
+    else:
+        st.info("🔇 Voice assistant is turned off.")
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
+
 
