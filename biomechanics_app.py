@@ -292,63 +292,10 @@ elif st.session_state.step == 2:
             st.session_state.step = 3
 
 # ---------------------------
-# STEP 3 — Recommendation (modified to add voice controls only)
+# STEP 3 — Recommendation
 # ---------------------------
 elif st.session_state.step == 3:
     st.header("Step 3 — Recommendation & Biomechanics Summary")
-
-    # ---------------------------
-# VOICE ASSISTANT SECTION
-# ---------------------------
-from gtts import gTTS
-import io
-import base64
-
-st.markdown("## 🗣️ Voice Assistant Settings")
-
-# Voice toggle
-voice_enabled = st.toggle("Enable Voice Assistant", value=False)
-
-# Language dropdown
-language = st.selectbox("🌐 Language", ["English", "Sinhala 🇱🇰", "Tamil 🇮🇳"])
-
-# Map to gTTS language codes
-lang_map = {
-    "English": "en",
-    "Sinhala 🇱🇰": "si",
-    "Tamil 🇮🇳": "ta"
-}
-
-selected_lang = lang_map[language]
-
-# Text to be read aloud (you can connect this with your recommendation later)
-text_to_read = """
-Recommended Shoe: Adidas Ultraboost.
-Material: Lightweight mesh upper with balanced foam midsole.
-Tip of the Day: Perform ankle rotations to strengthen stabilizers.
-"""
-
-if voice_enabled:
-    if st.button("🔊 Read Aloud"):
-        try:
-            tts = gTTS(text=text_to_read, lang=selected_lang)
-            audio_fp = io.BytesIO()
-            tts.write_to_fp(audio_fp)
-            audio_fp.seek(0)
-
-            audio_bytes = audio_fp.read()
-            audio_b64 = base64.b64encode(audio_bytes).decode()
-            audio_tag = f"""
-            <audio autoplay controls>
-                <source src="data:audio/mp3;base64,{audio_b64}" type="audio/mp3">
-            </audio>
-            """
-            st.markdown(audio_tag, unsafe_allow_html=True)
-        except Exception as e:
-            st.error(f"⚠️ Voice generation failed: {e}")
-else:
-    st.info("🔇 Voice Assistant is currently turned off.")
-
 
     def get_val(key, default):
         return st.session_state.inputs.get(key, st.session_state.get(key, default))
@@ -362,6 +309,10 @@ else:
     footwear_pref = get_val("footwear_pref", "Running shoes")
 
     set_activity_theme(activity_key)
+
+    st.markdown("### 🎤 Voice Assistant Settings")
+    enable_voice = st.toggle("Enable Voice Assistant", value=False)
+    lang = st.selectbox("Language", ["English", "Sinhala", "Tamil"], index=0)
 
     col_a1, col_a2, col_a3 = st.columns([1,1,2])
     with col_a1:
@@ -386,11 +337,24 @@ else:
                 f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
                 unsafe_allow_html=True,
             )
-        # announce Analyze (only if voice enabled)
-        if voice_enabled:
-            # speak using server gTTS if available, else browser TTS
-            announce = f"Recommendation ready. {brand} recommended."
-            speak_text_reliable(announce, selected_codes)
+
+        if enable_voice:
+            text_to_speak = f"Recommendation ready. {brand} recommended."
+            if lang == "Sinhala":
+                text_to_speak = "නිර්දේශය සූදානම්. " + brand + " නිර්දේශ කරයි."
+            elif lang == "Tamil":
+                text_to_speak = "பரிந்துரை தயார். " + brand + " பரிந்துரைக்கப்படுகிறது."
+            st.components.v1.html(f"""
+            <script>
+                var msg = new SpeechSynthesisUtterance({repr(text_to_speak)});
+                msg.lang = {{
+                    "English": "en-US",
+                    "Sinhala": "si-LK",
+                    "Tamil": "ta-IN"
+                }}[{repr(lang)}] || "en-US";
+                window.speechSynthesis.speak(msg);
+            </script>
+            """, height=0)
 
     summary_md = f"""
     <div class="summary-card">
@@ -410,7 +374,6 @@ else:
         st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
 
-        # 🟤 Brown pastel Justification box (escaped for safety)
         justification_safe = html_mod.escape(justification)
         st.markdown(
             (
@@ -421,14 +384,14 @@ else:
                 "border-radius:8px;"
                 "margin-top:8px;"
                 "font-weight:600;"
-                "color:#222;\">"
+                "color:#222;"
+                "\">"
                 "💬 Justification: " + justification_safe +
                 "</div>"
             ),
             unsafe_allow_html=True,
         )
 
-        # ✅ Yellow pastel Tip of the Day box
         tips = [
             "Stretch your calves daily to reduce heel strain.",
             "Replace running shoes every 500–800 km.",
@@ -468,16 +431,17 @@ else:
         Justification: {justification}
         """)
 
-        # ✅ Pink download button
         b64 = base64.b64encode(summary_text.encode()).decode()
-        download_href = f"""
-        <a download="footfit_recommendation.txt" href="data:text/plain;base64,{b64}"
-           style="background-color:#ff4da6; color:white; padding:10px 14px; border-radius:8px;
-                  text-decoration:none; font-weight:bold; display:inline-block;">
-           📄 Download Recommendation (txt)
-        </a>
-        """
-        st.markdown(download_href, unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <a download="footfit_recommendation.txt" href="data:text/plain;base64,{b64}"
+               style="background-color:#ff4da6; color:white; padding:10px 14px; border-radius:8px;
+                      text-decoration:none; font-weight:bold; display:inline-block;">
+               📄 Download Recommendation (txt)
+            </a>
+            """,
+            unsafe_allow_html=True,
+        )
 
     with rec_col2:
         st.subheader("👟 Virtual Shoe Wall")
@@ -496,20 +460,23 @@ else:
         html_images += "</div>"
         st.markdown(html_images, unsafe_allow_html=True)
 
-    # 🔊 Read Aloud section (respects toggle)
-    if voice_enabled:
-        st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
-        if st.session_state.get("read_aloud", False):
-            # Build full text to speak
-            speak_payload = f"I recommend {brand}. Material: {material}. Justification: {justification}. Tip: {tip_text}"
-            # selected_codes is (gtts_code, browser_code)
-            speak_text_reliable(speak_payload, selected_codes)
-    else:
-        st.info("🔇 Voice assistant is turned off.")
+    if enable_voice and st.checkbox("🔊 Read recommendation aloud", key="read_aloud"):
+        text_to_speak = f"I recommend {brand}. Material: {material}. {justification}"
+        if lang == "Sinhala":
+            text_to_speak = f"මම නිර්දේශ කරනවා {brand}. ද්රව්යය: {material}. {justification}"
+        elif lang == "Tamil":
+            text_to_speak = f"நான் பரிந்துரைக்கிறேன் {brand}. பொருள்: {material}. {justification}"
+        st.components.v1.html(f"""
+        <script>
+            var msg = new SpeechSynthesisUtterance({repr(text_to_speak)});
+            msg.lang = {{
+                "English": "en-US",
+                "Sinhala": "si-LK",
+                "Tamil": "ta-IN"
+            }}[{repr(lang)}] || "en-US";
+            window.speechSynthesis.speak(msg);
+        </script>
+        """, height=0)
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
-
-
-
-
