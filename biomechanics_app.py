@@ -6,7 +6,8 @@ import random
 import textwrap
 import base64
 import html as html_mod
-import urllib.parse
+from gtts import gTTS
+import tempfile
 
 # ---------------------------
 # Config
@@ -26,16 +27,14 @@ def load_image(name):
         pass
     return None
 
-def speak_text_google(text, lang="en"):
-    """
-    Use Google Translate TTS to speak in English, Sinhala, or Tamil.
-    lang: 'en', 'si', 'ta'
-    """
-    tts_url = (
-        "https://translate.google.com/translate_tts?"
-        + f"ie=UTF-8&q={urllib.parse.quote(text)}&tl={lang}&client=tw-ob"
-    )
-    st.audio(tts_url, format="audio/mp3")
+# ---------------------------
+# TTS Function — Google TTS
+# ---------------------------
+def speak_text_google(text, lang='en'):
+    tts = gTTS(text=text, lang=lang)
+    tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+    tts.save(tmp_file.name)
+    st.audio(tmp_file.name)
 
 # ---------------------------
 # Recommender logic
@@ -92,36 +91,19 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 # Themes
 # ---------------------------
 def set_white_theme():
-    """White theme + white dropdowns + light pastel violet navigation buttons"""
     css = """
     <style>
     .stApp { background-color: white; color: black; }
 
-    /* General text color */
     .stMarkdown, .stText, .stSelectbox, .stRadio, label, div, p, h1, h2, h3, h4, h5, h6 {
         color: black !important;
     }
 
-    /* Dropdowns: white background and white open list */
-    div[data-baseweb="select"] {
-        background-color: white !important;
-        color: black !important;
-    }
-    div[data-baseweb="select"] span {
-        color: black !important;
-    }
-    div[data-baseweb="select"] div {
-        background-color: white !important;
-        color: black !important;
-    }
-    ul, li {
-        background-color: white !important;
-        color: black !important;
-    }
-    li:hover {
-        background-color: #f0f0f0 !important;
-        color: black !important;
-    }
+    div[data-baseweb="select"] { background-color: white !important; color: black !important; }
+    div[data-baseweb="select"] span { color: black !important; }
+    div[data-baseweb="select"] div { background-color: white !important; color: black !important; }
+    ul, li { background-color: white !important; color: black !important; }
+    li:hover { background-color: #f0f0f0 !important; color: black !important; }
 
     select, textarea, input {
         background-color: white !important;
@@ -131,7 +113,6 @@ def set_white_theme():
         padding: 6px;
     }
 
-    /* Navigation buttons (Next, Back) — light pastel violet */
     .stButton>button {
         background-color: #d9c2f0 !important;
         color: black !important;
@@ -139,11 +120,8 @@ def set_white_theme():
         border-radius: 6px;
         font-weight: 600 !important;
     }
-    .stButton>button:hover {
-        background-color: #cbb3eb !important;
-    }
+    .stButton>button:hover { background-color: #cbb3eb !important; }
 
-    /* Stronger selector for checkbox label to ensure orange colour */
     div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {
         color: orange !important;
         font-weight: bold !important;
@@ -154,7 +132,6 @@ def set_white_theme():
     st.markdown(css, unsafe_allow_html=True)
 
 def set_activity_theme(activity_key):
-    """Activity-based theme (Step 3)"""
     if activity_key == "Low":
         color = "#d8ecff"; accent = "#3478b6"
     elif activity_key == "Moderate":
@@ -166,54 +143,16 @@ def set_activity_theme(activity_key):
     <style>
     .stApp {{ background: {color}; color: #111 !important; }}
 
-    .summary-card {{
-        background: white; border-radius: 10px;
-        padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        font-weight: 600; color: #111;
-    }}
-    .highlight-box {{
-        border-left: 6px solid {accent};
-        padding:12px; border-radius:8px;
-        background: rgba(255,255,255,0.6);
-        font-weight: 600; color: #111;
-    }}
+    .summary-card {{ background: white; border-radius: 10px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); font-weight: 600; color: #111; }}
+    .highlight-box {{ border-left: 6px solid {accent}; padding:12px; border-radius:8px; background: rgba(255,255,255,0.6); font-weight: 600; color: #111; }}
 
-    /* Recommended shoe & material boxes */
-    .rec-shoe {{
-        background-color: #b8f5c1 !important; /* pastel green */
-        color: #000 !important;
-        font-weight: bold;
-        font-size: 1.2em;
-        border-radius: 8px;
-        padding: 10px;
-    }}
-    .rec-material {{
-        background-color: #cfe9ff !important; /* pastel blue */
-        color: #000 !important;
-        font-weight: bold;
-        font-size: 1.1em;
-        border-radius: 8px;
-        padding: 10px;
-    }}
+    .rec-shoe {{ background-color: #b8f5c1 !important; color: #000 !important; font-weight: bold; font-size: 1.2em; border-radius: 8px; padding: 10px; }}
+    .rec-material {{ background-color: #cfe9ff !important; color: #000 !important; font-weight: bold; font-size: 1.1em; border-radius: 8px; padding: 10px; }}
 
-    /* Buttons — pastel violet */
-    .stButton>button {{
-        background-color: #d9c2f0 !important;
-        color: black !important;
-        border: 1px solid #b495d6 !important;
-        border-radius: 6px;
-        font-weight: 600 !important;
-    }}
-    .stButton>button:hover {{
-        background-color: #cbb3eb !important;
-    }}
+    .stButton>button {{ background-color: #d9c2f0 !important; color: black !important; border: 1px solid #b495d6 !important; border-radius: 6px; font-weight: 600 !important; }}
+    .stButton>button:hover {{ background-color: #cbb3eb !important; }}
 
-    /* Stronger selector for checkbox label to ensure orange colour */
-    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {{
-        color: orange !important;
-        font-weight: bold !important;
-        opacity: 1 !important;
-    }}
+    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {{ color: orange !important; font-weight: bold !important; opacity: 1 !important; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -221,33 +160,30 @@ def set_activity_theme(activity_key):
 # ---------------------------
 # Session initialization
 # ---------------------------
-if 'step' not in st.session_state:
-    st.session_state.step = 1
-if 'inputs' not in st.session_state:
-    st.session_state.inputs = {}
-if 'analyze_clicked' not in st.session_state:
-    st.session_state.analyze_clicked = False
-if 'foot_type' not in st.session_state:
-    st.session_state.foot_type = "Normal Arch"
-if 'footwear_pref' not in st.session_state:
-    st.session_state.footwear_pref = "Running shoes"
-if 'tts_lang' not in st.session_state:
-    st.session_state.tts_lang = "en"  # Default language
+if 'step' not in st.session_state: st.session_state.step = 1
+if 'inputs' not in st.session_state: st.session_state.inputs = {}
+if 'analyze_clicked' not in st.session_state: st.session_state.analyze_clicked = False
+if 'foot_type' not in st.session_state: st.session_state.foot_type = "Normal Arch"
+if 'footwear_pref' not in st.session_state: st.session_state.footwear_pref = "Running shoes"
+if 'tts_lang' not in st.session_state: st.session_state.tts_lang = "en"
 
 # ---------------------------
-# Header
+# Header & Language selection
 # ---------------------------
 col1, col2 = st.columns([1, 8])
 with col1:
     logo = load_image("logo.png")
-    if logo:
-        st.image(logo, width=100)
-    else:
-        st.markdown("<h3>👟 FootFit Analyzer</h3>", unsafe_allow_html=True)
+    if logo: st.image(logo, width=100)
+    else: st.markdown("<h3>👟 FootFit Analyzer</h3>", unsafe_allow_html=True)
 with col2:
     st.markdown("<h1 style='margin-top:8px'>FootFit Analyzer — Biomechanics Footwear Profiler</h1>", unsafe_allow_html=True)
 st.write("A biomechanics-informed recommender that suggests shoe brand, materials and explains why.")
 st.markdown("---")
+
+lang_col1, lang_col2 = st.columns([1,1])
+with lang_col1:
+    tts_choice = st.selectbox("🔊 Select Voice Language", ["English", "Sinhala", "Tamil"])
+    st.session_state.tts_lang = "en" if tts_choice=="English" else ("si" if tts_choice=="Sinhala" else "ta")
 
 # ---------------------------
 # STEP 1 — Personal Info
@@ -339,7 +275,6 @@ elif st.session_state.step == 3:
     activity_key = get_val("activity_key", "Moderate")
     foot_type = get_val("foot_type", "Normal Arch")
     footwear_pref = get_val("footwear_pref", "Running shoes")
-    tts_lang = st.session_state.get("tts_lang", "en")
 
     set_activity_theme(activity_key)
 
@@ -359,19 +294,13 @@ elif st.session_state.step == 3:
         foot_type, weight_group, activity_label, footwear_pref, age_group, gender
     )
 
-    # Multilingual translations for Material & Tip
-    material_dict = {"en":"Material", "si":"වාස්තු", "ta":"வஸ்து"}
-    tip_dict = {"en":"Tip of the Day", "si":"දවසේ උපදෙස්", "ta":"இன்றைய குறிப்புகள்"}
-    greeting_dict = {"en":"Recommendation ready.", "si":"ප්‍රතිපෝෂණය සූදානම්යි.", "ta":"பரிந்துரை தயார்."}
-
     if st.session_state.analyze_clicked:
         gif_path = os.path.join(IMAGE_DIR, "walking.gif")
         if os.path.exists(gif_path):
-            st.markdown(
-                f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
-                unsafe_allow_html=True,
-            )
-        speak_text_google(f"{greeting_dict[tts_lang]} {brand} recommended.", tts_lang)
+            st.markdown(f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>", unsafe_allow_html=True)
+        greetings = {"en":"Hello!", "si":"ආයුබෝවන්!", "ta":"வணக்கம்!"}
+        tips = ["Stretch your calves daily to reduce heel strain.", "Replace running shoes every 500–800 km.", "Air-dry shoes after workouts to prevent odor and damage."]
+        speak_text_google(f"{greetings[st.session_state.tts_lang]} {brand} recommended. Material: {material}. Tip: {random.choice(tips)}", st.session_state.tts_lang)
 
     summary_md = f"""
     <div class="summary-card">
