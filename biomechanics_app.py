@@ -4,8 +4,9 @@ import os
 from PIL import Image
 import random
 import textwrap
-import base64  # added for pink download button
+import base64
 import html as html_mod
+import urllib.parse
 
 # ---------------------------
 # Config
@@ -25,35 +26,16 @@ def load_image(name):
         pass
     return None
 
-# ---------------------------
-# Voice Assistant Helper
-# ---------------------------
-def speak_text(text, lang="en"):
+def speak_text_google(text, lang="en"):
     """
-    lang: "en" = English, "si" = Sinhala, "ta" = Tamil
+    Use Google Translate TTS to speak in English, Sinhala, or Tamil.
+    lang: 'en', 'si', 'ta'
     """
-    voices = {"en": "en-US", "si": "si-LK", "ta": "ta-IN"}
-    voice = voices.get(lang, "en-US")
-    html = f"""
-    <script>
-    const msg = new SpeechSynthesisUtterance({repr(text)});
-    msg.lang = "{voice}";
-    msg.rate = 1.0;
-    window.speechSynthesis.speak(msg);
-    </script>
-    """
-    st.components.v1.html(html, height=0)
-
-def get_translations(lang):
-    """
-    Returns a dictionary of translations for key words
-    """
-    translations = {
-        "en": {"greeting": "Hello!", "Material": "Material", "Tip": "Tip of the Day"},
-        "si": {"greeting": "ආයුබෝවන්!", "Material": "ද්‍රව්‍යය", "Tip": "දින සලකුණ"},
-        "ta": {"greeting": "வணக்கம்!", "Material": "பொருள்", "Tip": "இன்றைய குறிப்பு"}
-    }
-    return translations.get(lang, translations["en"])
+    tts_url = (
+        "https://translate.google.com/translate_tts?"
+        + f"ie=UTF-8&q={urllib.parse.quote(text)}&tl={lang}&client=tw-ob"
+    )
+    st.audio(tts_url, format="audio/mp3")
 
 # ---------------------------
 # Recommender logic
@@ -108,14 +90,132 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 
 # ---------------------------
 # Themes
-# (NO CHANGES — original code kept)
 # ---------------------------
 def set_white_theme():
-    css = """..."""  # (original code as provided)
+    """White theme + white dropdowns + light pastel violet navigation buttons"""
+    css = """
+    <style>
+    .stApp { background-color: white; color: black; }
+
+    /* General text color */
+    .stMarkdown, .stText, .stSelectbox, .stRadio, label, div, p, h1, h2, h3, h4, h5, h6 {
+        color: black !important;
+    }
+
+    /* Dropdowns: white background and white open list */
+    div[data-baseweb="select"] {
+        background-color: white !important;
+        color: black !important;
+    }
+    div[data-baseweb="select"] span {
+        color: black !important;
+    }
+    div[data-baseweb="select"] div {
+        background-color: white !important;
+        color: black !important;
+    }
+    ul, li {
+        background-color: white !important;
+        color: black !important;
+    }
+    li:hover {
+        background-color: #f0f0f0 !important;
+        color: black !important;
+    }
+
+    select, textarea, input {
+        background-color: white !important;
+        color: black !important;
+        border: 1px solid #ccc !important;
+        border-radius: 6px;
+        padding: 6px;
+    }
+
+    /* Navigation buttons (Next, Back) — light pastel violet */
+    .stButton>button {
+        background-color: #d9c2f0 !important;
+        color: black !important;
+        border: 1px solid #b495d6 !important;
+        border-radius: 6px;
+        font-weight: 600 !important;
+    }
+    .stButton>button:hover {
+        background-color: #cbb3eb !important;
+    }
+
+    /* Stronger selector for checkbox label to ensure orange colour */
+    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {
+        color: orange !important;
+        font-weight: bold !important;
+        opacity: 1 !important;
+    }
+    </style>
+    """
     st.markdown(css, unsafe_allow_html=True)
 
 def set_activity_theme(activity_key):
-    css = f"""..."""  # (original code as provided)
+    """Activity-based theme (Step 3)"""
+    if activity_key == "Low":
+        color = "#d8ecff"; accent = "#3478b6"
+    elif activity_key == "Moderate":
+        color = "#e8f9e9"; accent = "#2e8b57"
+    else:
+        color = "#ffe9d6"; accent = "#e55300"
+
+    css = f"""
+    <style>
+    .stApp {{ background: {color}; color: #111 !important; }}
+
+    .summary-card {{
+        background: white; border-radius: 10px;
+        padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        font-weight: 600; color: #111;
+    }}
+    .highlight-box {{
+        border-left: 6px solid {accent};
+        padding:12px; border-radius:8px;
+        background: rgba(255,255,255,0.6);
+        font-weight: 600; color: #111;
+    }}
+
+    /* Recommended shoe & material boxes */
+    .rec-shoe {{
+        background-color: #b8f5c1 !important; /* pastel green */
+        color: #000 !important;
+        font-weight: bold;
+        font-size: 1.2em;
+        border-radius: 8px;
+        padding: 10px;
+    }}
+    .rec-material {{
+        background-color: #cfe9ff !important; /* pastel blue */
+        color: #000 !important;
+        font-weight: bold;
+        font-size: 1.1em;
+        border-radius: 8px;
+        padding: 10px;
+    }}
+
+    /* Buttons — pastel violet */
+    .stButton>button {{
+        background-color: #d9c2f0 !important;
+        color: black !important;
+        border: 1px solid #b495d6 !important;
+        border-radius: 6px;
+        font-weight: 600 !important;
+    }}
+    .stButton>button:hover {{
+        background-color: #cbb3eb !important;
+    }}
+
+    /* Stronger selector for checkbox label to ensure orange colour */
+    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {{
+        color: orange !important;
+        font-weight: bold !important;
+        opacity: 1 !important;
+    }}
+    </style>
+    """
     st.markdown(css, unsafe_allow_html=True)
 
 # ---------------------------
@@ -131,13 +231,13 @@ if 'foot_type' not in st.session_state:
     st.session_state.foot_type = "Normal Arch"
 if 'footwear_pref' not in st.session_state:
     st.session_state.footwear_pref = "Running shoes"
-if 'voice_lang' not in st.session_state:
-    st.session_state.voice_lang = "en"
+if 'tts_lang' not in st.session_state:
+    st.session_state.tts_lang = "en"  # Default language
 
 # ---------------------------
-# HEADER
+# Header
 # ---------------------------
-col1, col2 = st.columns([1,8])
+col1, col2 = st.columns([1, 8])
 with col1:
     logo = load_image("logo.png")
     if logo:
@@ -148,14 +248,6 @@ with col2:
     st.markdown("<h1 style='margin-top:8px'>FootFit Analyzer — Biomechanics Footwear Profiler</h1>", unsafe_allow_html=True)
 st.write("A biomechanics-informed recommender that suggests shoe brand, materials and explains why.")
 st.markdown("---")
-
-# ---------------------------
-# VOICE LANGUAGE SELECT
-# ---------------------------
-st.sidebar.subheader("Voice Assistant Language")
-lang_choice = st.sidebar.radio("Select Language", ["English", "සිංහල", "தமிழ்"])
-lang_map = {"English":"en","සිංහල":"si","தமிழ்":"ta"}
-st.session_state.voice_lang = lang_map[lang_choice]
 
 # ---------------------------
 # STEP 1 — Personal Info
@@ -218,6 +310,11 @@ elif st.session_state.step == 2:
 
     st.write(f"👉 Currently selected footwear: {st.session_state.footwear_pref}")
 
+    # --- Select TTS Language ---
+    st.subheader("🔊 Voice Assistant Language")
+    tts_choice = st.radio("Choose language:", ["English", "Sinhala", "Tamil"], index=["English","Sinhala","Tamil"].index("English"))
+    st.session_state.tts_lang = {"English":"en", "Sinhala":"si", "Tamil":"ta"}[tts_choice]
+
     back_col, next_col = st.columns([1,1])
     with back_col:
         if st.button("← Back", key="back_step1"):
@@ -226,7 +323,7 @@ elif st.session_state.step == 2:
         if st.button("Next →", key="to_step3"):
             st.session_state.step = 3
 
-    # ---------------------------
+# ---------------------------
 # STEP 3 — Recommendation
 # ---------------------------
 elif st.session_state.step == 3:
@@ -242,6 +339,7 @@ elif st.session_state.step == 3:
     activity_key = get_val("activity_key", "Moderate")
     foot_type = get_val("foot_type", "Normal Arch")
     footwear_pref = get_val("footwear_pref", "Running shoes")
+    tts_lang = st.session_state.get("tts_lang", "en")
 
     set_activity_theme(activity_key)
 
@@ -261,6 +359,11 @@ elif st.session_state.step == 3:
         foot_type, weight_group, activity_label, footwear_pref, age_group, gender
     )
 
+    # Multilingual translations for Material & Tip
+    material_dict = {"en":"Material", "si":"වාස්තු", "ta":"வஸ்து"}
+    tip_dict = {"en":"Tip of the Day", "si":"දවසේ උපදෙස්", "ta":"இன்றைய குறிப்புகள்"}
+    greeting_dict = {"en":"Recommendation ready.", "si":"ප්‍රතිපෝෂණය සූදානම්යි.", "ta":"பரிந்துரை தயார்."}
+
     if st.session_state.analyze_clicked:
         gif_path = os.path.join(IMAGE_DIR, "walking.gif")
         if os.path.exists(gif_path):
@@ -268,7 +371,7 @@ elif st.session_state.step == 3:
                 f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
                 unsafe_allow_html=True,
             )
-        speak_text(f"Recommendation ready. {brand} recommended.")
+        speak_text_google(f"{greeting_dict[tts_lang]} {brand} recommended.", tts_lang)
 
     summary_md = f"""
     <div class="summary-card">
@@ -286,9 +389,9 @@ elif st.session_state.step == 3:
     rec_col1, rec_col2 = st.columns([2,1])
     with rec_col1:
         st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='rec-material'>🧵 <b>{material_dict[tts_lang]}:</b> {material}</div>", unsafe_allow_html=True)
 
-        # 🟤 Brown pastel Justification box (escaped for safety)
+        # Justification
         justification_safe = html_mod.escape(justification)
         st.markdown(
             (
@@ -307,15 +410,31 @@ elif st.session_state.step == 3:
             unsafe_allow_html=True,
         )
 
-        # ✅ Yellow pastel Tip of the Day box
-        tips = [
-            "Stretch your calves daily to reduce heel strain.",
-            "Replace running shoes every 500–800 km.",
-            "Use orthotic insoles when experiencing arch pain.",
-            "Air-dry shoes after workouts to prevent odor and damage.",
-            "Perform ankle rotations to strengthen stabilizers."
-        ]
-        tip_text = random.choice(tips)
+        # Tip of the Day
+        tips = {
+            "en": [
+                "Stretch your calves daily to reduce heel strain.",
+                "Replace running shoes every 500–800 km.",
+                "Use orthotic insoles when experiencing arch pain.",
+                "Air-dry shoes after workouts to prevent odor and damage.",
+                "Perform ankle rotations to strengthen stabilizers."
+            ],
+            "si": [
+                "ඇගේ පස්සර දිගු කිරීමේ ව්‍යායාම දිනපතා කරන්න.",
+                "දාවන සපත්තු 500–800 kmන් පසු මාරු කරන්න.",
+                "ඇතුල්ම ආධාරක භාවිතා කරන්න.",
+                "ව්‍යායාමෙන් පසු සපත්තු වාතයෙන් වියළන්න.",
+                "ඇස්ටේබිලයිසර් ශක්තිමත් කිරීම සඳහා අකුල් මාරු කරන්න."
+            ],
+            "ta": [
+                "வலி குறைக்க தினமும் கால் கடிகை நீட்டிப்பு செய்யவும்.",
+                "ஓட்ட சீருடைகளை 500–800 கி.மீ.க்கு மாற்றவும்.",
+                "ஆர்க் வலி உள்ளால் ஆர்த்தோடிக் சப்போர்டுகளை பயன்படுத்தவும்.",
+                "பயிற்சிக்குப் பிறகு காலணிகளை காற்றில் விறகு விடவும்.",
+                "முற்று நிலைத்தன்மை வலுவூட்ட கால் சுழற்சிகளை செய்யவும்."
+            ]
+        }
+        tip_text = random.choice(tips[tts_lang])
         st.markdown(
             f"""
             <div style="
@@ -326,7 +445,7 @@ elif st.session_state.step == 3:
                 margin-top:8px;
                 font-weight:600;
                 color:#333;">
-                💡 Tip of the Day: {tip_text}
+                💡 {tip_dict[tts_lang]}: {tip_text}
             </div>
             """,
             unsafe_allow_html=True,
@@ -345,9 +464,10 @@ elif st.session_state.step == 3:
         Recommended Shoe: {brand}
         Material: {material}
         Justification: {justification}
+        Tip of the Day: {tip_text}
         """)
 
-        # ✅ Pink download button
+        # Pink download button
         b64 = base64.b64encode(summary_text.encode()).decode()
         download_href = f"""
         <a download="footfit_recommendation.txt" href="data:text/plain;base64,{b64}"
@@ -378,8 +498,8 @@ elif st.session_state.step == 3:
     st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
 
     if st.session_state.get("read_aloud", False):
-    trans = get_translations(st.session_state.voice_lang)
-    greeting = trans["greeting"]
-    mat_text = trans["Material"]
-    tip_text_label = trans["Tip"]
-    speak_text(f"{greeting} Recommendation ready. {brand} recommended. {mat_text}: {material}. {justification}. {tip_text_label}: {tip_text}", lang=st.session_state.voice_lang)
+        speak_text_google(f"{brand} recommended. {material_dict[tts_lang]}: {material}. {justification}. {tip_dict[tts_lang]}: {tip_text}", tts_lang)
+
+    if st.button("← Back", key="back_to_step2"):
+        st.session_state.step = 2
+
