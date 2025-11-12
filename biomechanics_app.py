@@ -348,18 +348,6 @@ elif st.session_state.step == 3:
 
     set_activity_theme(activity_key)
 
-    # ---------------------------
-    # Language selection for TTS
-    # ---------------------------
-  st.subheader("🔊 Voice Assistant Language")
-voice_lang = st.selectbox(
-    "Choose language for reading recommendation:",
-    ["English", "Sinhala", "Tamil"]
-)
-lang_code = "en" if voice_lang == "English" else ("si" if voice_lang == "Sinhala" else "ta")
-st.session_state.voice_lang = lang_code
-
-
     col_a1, col_a2, col_a3 = st.columns([1,1,2])
     with col_a1:
         if st.button("Analyze", key="analyze_btn"):
@@ -376,7 +364,7 @@ st.session_state.voice_lang = lang_code
         foot_type, weight_group, activity_label, footwear_pref, age_group, gender
     )
 
-    # Tip of the Day
+    # Tip of the day
     tips = [
         "Stretch your calves daily to reduce heel strain.",
         "Replace running shoes every 500–800 km.",
@@ -394,6 +382,9 @@ st.session_state.voice_lang = lang_code
                 unsafe_allow_html=True,
             )
 
+    # ---------------------------
+    # Biomechanics Summary Card
+    # ---------------------------
     summary_md = f"""
     <div class="summary-card">
       <h3>🧠 <b>Biomechanics Summary</b></h3>
@@ -415,24 +406,39 @@ st.session_state.voice_lang = lang_code
         # 🟤 Justification box
         justification_safe = html_mod.escape(justification)
         st.markdown(
-            (
-                "<div style=\"background-color:#d2b48c;border-left:6px solid #8b6f47;"
-                "padding:10px 14px;border-radius:8px;margin-top:8px;font-weight:600;color:#222;"
-                "\">💬 Justification: " + justification_safe +
-                "</div>"
-            ),
+            f"""
+            <div style="
+                background-color:#d2b48c;
+                border-left:6px solid #8b6f47;
+                padding:10px 14px;
+                border-radius:8px;
+                margin-top:8px;
+                font-weight:600;
+                color:#222;">
+                💬 Justification: {justification_safe}
+            </div>
+            """,
             unsafe_allow_html=True,
         )
 
-        # ✅ Tip box
+        # ✅ Tip of the day box
         st.markdown(
-            f"<div style='background-color:#fff9c4;border-left:6px solid #ffd54f;"
-            f"padding:10px 14px;border-radius:8px;margin-top:8px;font-weight:600;color:#333;'>"
-            f"💡 Tip of the Day: {tip_text}</div>",
+            f"""
+            <div style="
+                background-color:#fff9c4;
+                border-left:6px solid #ffd54f;
+                padding:10px 14px;
+                border-radius:8px;
+                margin-top:8px;
+                font-weight:600;
+                color:#333;">
+                💡 Tip of the Day: {tip_text}
+            </div>
+            """,
             unsafe_allow_html=True,
         )
 
-        # ✅ Download button
+        # ✅ Download recommendation
         summary_text = textwrap.dedent(f"""
         FootFit Analyzer - Recommendation
         ---------------------------------
@@ -458,12 +464,44 @@ st.session_state.voice_lang = lang_code
         """
         st.markdown(download_href, unsafe_allow_html=True)
 
-        # 🔊 Read aloud checkbox
-        read_aloud = st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
-        if read_aloud or st.session_state.analyze_clicked:
-            speak_text_multilang(justification, tip_text, lang=st.session_state.voice_lang)
+    with rec_col2:
+        st.subheader("👟 Virtual Shoe Wall")
+        sample_map = {
+            "Running shoes": ["running1.png", "running2.png"],
+            "Cross-training shoes": ["cross1.png", "cross2.png"],
+            "Casual/fashion sneakers": ["casual1.png", "casual2.png"],
+            "Sandals or slippers": ["sandal1.png", "sandal2.png"]
+        }
+        imgs = sample_map.get(footwear_pref, [])
+        html_images = "<div style='display:flex; flex-wrap:wrap;'>"
+        for im in imgs:
+            p = os.path.join(IMAGE_DIR, im)
+            if os.path.exists(p):
+                html_images += f"<img src='{p}' width='110' style='margin:6px; border-radius:8px;'/>"
+        html_images += "</div>"
+        st.markdown(html_images, unsafe_allow_html=True)
 
-        summary_text
+    # ---------------------------
+    # Voice Assistant — Multilingual
+    # ---------------------------
+    voice_lang = st.selectbox(
+        "Choose Voice Language / மொழி / භාෂාව",
+        ["English", "Tamil", "Sinhala"]
+    )
+    lang_code = {"English": "en", "Tamil": "ta", "Sinhala": "si"}[voice_lang]
 
+    if st.checkbox("🔊 Read recommendation aloud"):
+        # Greeting in native language
+        greetings = {
+            "English": "Hello!",
+            "Tamil": "வணக்கம்!",
+            "Sinhala": "ආයුබෝවන්!"
+        }
+        greeting = greetings.get(voice_lang, "Hello!")
 
+        # Full text to speak
+        speech_text = f"{greeting} Recommendation: {brand}. Material: {material}. Justification: {justification}. Tip of the Day: {tip_text}"
+        speak_multilang(speech_text, lang=lang_code)
 
+    if st.button("← Back", key="back_to_step2"):
+        st.session_state.step = 2
