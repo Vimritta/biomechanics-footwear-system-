@@ -206,7 +206,6 @@ elif st.session_state.step == 2:
         if st.button("← Back", key="back_step1"): st.session_state.step = 1
     with next_col:
         if st.button("Next →", key="to_step3"): st.session_state.step = 3
-
 # ---------------------------
 # STEP 3 — Recommendation
 # ---------------------------
@@ -216,9 +215,6 @@ elif st.session_state.step == 3:
     def get_val(key, default):
         return st.session_state.inputs.get(key, st.session_state.get(key, default))
 
-    # ---------------------------
-    # Retrieve user inputs
-    # ---------------------------
     age_group = get_val("age_group", "18–25")
     gender = get_val("gender", "Male")
     weight_group = get_val("weight_group", "50–70 kg")
@@ -227,71 +223,46 @@ elif st.session_state.step == 3:
     foot_type = get_val("foot_type", "Normal Arch")
     footwear_pref = get_val("footwear_pref", "Running shoes")
 
-    # ---------------------------
-    # Display greeting based on age + gender
-    # ---------------------------
-    greetings = {
-        "Under 18": {
-            "Male": "Hey young champ! Ready to step up?",
-            "Female": "Hey young star! Ready to shine?",
-            "Other": "Hey there! Ready to move?"
-        },
-        "18–25": {
-            "Male": "Hello, young runner!",
-            "Female": "Hello, young athlete!",
-            "Other": "Hello there! Ready to get moving?"
-        },
-        "26–40": {
-            "Male": "Hi there, active gentleman!",
-            "Female": "Hi there, active lady!",
-            "Other": "Hi there! Let’s find your perfect fit!"
-        },
-        "41–60": {
-            "Male": "Good day, sir! Let’s find comfort and performance.",
-            "Female": "Good day, ma’am! Let’s find comfort and performance.",
-            "Other": "Good day! Let’s find comfort and performance."
-        },
-        "60+": {
-            "Male": "Welcome, wise walker! Let’s make each step easy.",
-            "Female": "Welcome, graceful walker! Let’s make each step easy.",
-            "Other": "Welcome! Let’s choose the best shoes for easy walking."
-        }
-    }
-
-    # Map age ranges for greetings
-    age_key = age_group
-    if age_group in ["51–65", "Over 65"]:
-        age_key = "60+"
-    elif age_group in ["36–50"]:
-        age_key = "41–60"
-    elif age_group in ["26–35"]:
-        age_key = "26–40"
-
-    gender_key = gender if gender in ["Male", "Female"] else "Other"
-    greeting_text = greetings.get(age_key, {}).get(gender_key, "Hello!")  # fallback
-
-    # Show greeting
-    st.markdown(f"<h3 style='color:#4b0082'>{greeting_text}</h3>", unsafe_allow_html=True)
-
-    # ---------------------------
-    # Voice read the greeting automatically
-    # ---------------------------
-    speak_text(greeting_text)
-
-    # ---------------------------
-    # Display walking GIF below greeting
-    # ---------------------------
-    walking_gif_url = "https://i.pinimg.com/originals/e8/ef/28/e8ef28560911f51810df9b0581819650.gif"
-    st.markdown(f"<img src='{walking_gif_url}' width='220' style='border-radius:8px; margin-top:6px;'/>", unsafe_allow_html=True)
-
-    # ---------------------------
-    # Set theme for Step 3
-    # ---------------------------
     set_activity_theme(activity_key)
 
-    # ---------------------------
-    # Analyze / Start Over buttons
-    # ---------------------------
+    # ---------------- Greeting ----------------
+    greetings = {
+        "Under 18": {"Male": "Hey young champ! Ready to step up?",
+                     "Female": "Hey young star! Ready to shine?",
+                     "Other": "Hey there! Ready to move?"},
+        "18–25": {"Male": "Hello, young runner!",
+                  "Female": "Hello, young athlete!",
+                  "Other": "Hello there! Ready to get moving?"},
+        "26–40": {"Male": "Hi there, active gentleman!",
+                  "Female": "Hi there, active lady!",
+                  "Other": "Hi there! Let’s find your perfect fit!"},
+        "41–60": {"Male": "Good day, sir! Let’s find comfort and performance.",
+                  "Female": "Good day, ma’am! Let’s find comfort and performance.",
+                  "Other": "Good day! Let’s find comfort and performance."},
+        "60+": {"Male": "Welcome, wise walker! Let’s make each step easy.",
+                "Female": "Welcome, graceful walker! Let’s make each step easy.",
+                "Other": "Welcome! Let’s choose the best shoes for easy walking."}
+    }
+
+    # Determine neutral/other key
+    gender_key = gender if gender in ["Male","Female"] else "Other"
+    if age_group in ["36–50", "51–65", "Over 65"]:
+        age_key = "41–60" if age_group in ["36–50","51–65"] else "60+"
+    else:
+        age_key = age_group
+
+    greeting_text = greetings.get(age_key, {}).get(gender_key, "Hello! Ready to get moving?")
+    st.markdown(f"<h3 style='color:#5a2d82;'>{greeting_text}</h3>", unsafe_allow_html=True)
+    speak_text(greeting_text)
+
+    # ---------------- Walking GIF ----------------
+    walking_gif_url = "https://i.pinimg.com/originals/e8/ef/28/e8ef28560911f51810df9b0581819650.gif"
+    st.markdown(
+        f"<img src='{walking_gif_url}' width='220' style='border-radius:8px; margin-bottom:12px;'/>",
+        unsafe_allow_html=True
+    )
+
+    # ---------------- Buttons ----------------
     col_a1, col_a2, col_a3 = st.columns([1,1,2])
     with col_a1:
         if st.button("Analyze", key="analyze_btn"):
@@ -304,14 +275,13 @@ elif st.session_state.step == 3:
             st.session_state.footwear_pref = "Running shoes"
             st.session_state.analyze_clicked = False
 
-    # ---------------------------
-    # Recommendations
-    # ---------------------------
+    # ---------------- Recommendation ----------------
     brand, material, justification = recommend(
         foot_type, weight_group, activity_label, footwear_pref, age_group, gender
     )
 
     if st.session_state.analyze_clicked:
+        # ---------------- Biomechanics Summary ----------------
         summary_md = f"""
         <div class="summary-card">
           <h3>🧠 <b>Biomechanics Summary</b></h3>
@@ -325,28 +295,32 @@ elif st.session_state.step == 3:
         st.markdown(summary_md, unsafe_allow_html=True)
         st.markdown("---")
 
+        # ---------------- Recommendation Boxes ----------------
         rec_col1, rec_col2 = st.columns([2,1])
         with rec_col1:
             st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
 
+            # 🟤 Justification box
             justification_safe = html_mod.escape(justification)
             st.markdown(
-                f"""
-                <div style="
-                    background-color:#d2b48c;
-                    border-left:6px solid #8b6f47;
-                    padding:10px 14px;
-                    border-radius:8px;
-                    margin-top:8px;
-                    font-weight:600;
-                    color:#222;">
-                    💬 Justification: {justification_safe}
-                </div>
-                """,
+                (
+                    "<div style=\""
+                    "background-color:#d2b48c;"
+                    "border-left:6px solid #8b6f47;"
+                    "padding:10px 14px;"
+                    "border-radius:8px;"
+                    "margin-top:8px;"
+                    "font-weight:600;"
+                    "color:#222;"
+                    "\">"
+                    "💬 Justification: " + justification_safe +
+                    "</div>"
+                ),
                 unsafe_allow_html=True,
             )
 
+            # ✅ Tip of the Day
             tips = [
                 "Stretch your calves daily to reduce heel strain.",
                 "Replace running shoes every 500–800 km.",
@@ -371,6 +345,7 @@ elif st.session_state.step == 3:
                 unsafe_allow_html=True,
             )
 
+            # ---------------- Download ----------------
             summary_text = textwrap.dedent(f"""
             FootFit Analyzer - Recommendation
             ---------------------------------
@@ -396,6 +371,7 @@ elif st.session_state.step == 3:
             """
             st.markdown(download_href, unsafe_allow_html=True)
 
+        # ---------------- Virtual Shoe Wall ----------------
         with rec_col2:
             st.subheader("👟 Virtual Shoe Wall")
             sample_map = {
@@ -413,10 +389,12 @@ elif st.session_state.step == 3:
             html_images += "</div>"
             st.markdown(html_images, unsafe_allow_html=True)
 
-        st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
-
+        # ---------------- Read Aloud ----------------
+        st.checkbox("🔊 Read recommendation aloud", key="read_aloud", label_visibility="visible")
         if st.session_state.get("read_aloud", False):
             speak_text(f"I recommend {brand}. Material: {material}. {justification}")
 
+    # ---------------- Back ----------------
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
+
