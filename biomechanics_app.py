@@ -35,24 +35,6 @@ def speak_text(text):
     """
     st.components.v1.html(html, height=0)
 
-# ---- New helper: greeting based on age + gender (ONLY ADDED) ----
-def greeting_message(age_group, gender):
-    """Return a short greeting string depending on age group and gender."""
-    # Match the strings used in your Step 1 selectbox
-    if age_group == "Under 18":
-        return "Hey young champ! Ready to step up?" if gender == "Male" else "Hey young star! Ready to shine?"
-    if age_group == "18–25":
-        return "Hello, young runner!" if gender == "Male" else "Hello, young athlete!"
-    if age_group == "26–35":
-        return "Hi there, active gentleman!" if gender == "Male" else "Hi there, active lady!"
-    if age_group == "36–50":
-        return "Hi there, active gentleman!" if gender == "Male" else "Hi there, active lady!"
-    if age_group == "51–65":
-        return "Good day, sir! Let’s find comfort and performance!" if gender == "Male" else "Good day, ma’am! Let’s find comfort and performance!"
-    if age_group == "Over 65" or age_group == "65+":
-        return "Welcome, wise walker! Let’s make each step easy!" if gender == "Male" else "Welcome, graceful walker! Let’s make each step easy!"
-    return "Hello! Welcome to FootFit Analyzer!"
-
 # ---------------------------
 # Recommender logic
 # ---------------------------
@@ -108,128 +90,37 @@ def recommend(foot_type, weight_group, activity, footwear_pref, age_group, gende
 # Themes
 # ---------------------------
 def set_white_theme():
-    """White theme + white dropdowns + light pastel violet navigation buttons"""
     css = """
     <style>
     .stApp { background-color: white; color: black; }
-
-    /* General text color */
-    .stMarkdown, .stText, .stSelectbox, .stRadio, label, div, p, h1, h2, h3, h4, h5, h6 {
-        color: black !important;
-    }
-
-    /* Dropdowns: white background and white open list */
-    div[data-baseweb="select"] {
-        background-color: white !important;
-        color: black !important;
-    }
-    div[data-baseweb="select"] span {
-        color: black !important;
-    }
-    div[data-baseweb="select"] div {
-        background-color: white !important;
-        color: black !important;
-    }
-    ul, li {
-        background-color: white !important;
-        color: black !important;
-    }
-    li:hover {
-        background-color: #f0f0f0 !important;
-        color: black !important;
-    }
-
-    select, textarea, input {
-        background-color: white !important;
-        color: black !important;
-        border: 1px solid #ccc !important;
-        border-radius: 6px;
-        padding: 6px;
-    }
-
-    /* Navigation buttons (Next, Back) — light pastel violet */
-    .stButton>button {
-        background-color: #d9c2f0 !important;
-        color: black !important;
-        border: 1px solid #b495d6 !important;
-        border-radius: 6px;
-        font-weight: 600 !important;
-    }
-    .stButton>button:hover {
-        background-color: #cbb3eb !important;
-    }
-
-    /* Stronger selector for checkbox label to ensure orange colour */
-    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {
-        color: orange !important;
-        font-weight: bold !important;
-        opacity: 1 !important;
-    }
+    .stMarkdown, .stText, .stSelectbox, .stRadio, label, div, p, h1, h2, h3, h4, h5, h6 { color: black !important; }
+    div[data-baseweb="select"] { background-color: white !important; color: black !important; }
+    div[data-baseweb="select"] span { color: black !important; }
+    div[data-baseweb="select"] div { background-color: white !important; color: black !important; }
+    ul, li { background-color: white !important; color: black !important; }
+    li:hover { background-color: #f0f0f0 !important; color: black !important; }
+    select, textarea, input { background-color: white !important; color: black !important; border: 1px solid #ccc !important; border-radius: 6px; padding: 6px; }
+    .stButton>button { background-color: #d9c2f0 !important; color: black !important; border: 1px solid #b495d6 !important; border-radius: 6px; font-weight: 600 !important; }
+    .stButton>button:hover { background-color: #cbb3eb !important; }
+    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] { color: orange !important; font-weight: bold !important; opacity: 1 !important; }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 def set_activity_theme(activity_key):
-    """Activity-based theme (Step 3)"""
-    if activity_key == "Low":
-        color = "#d8ecff"; accent = "#3478b6"
-    elif activity_key == "Moderate":
-        color = "#e8f9e9"; accent = "#2e8b57"
-    else:
-        color = "#ffe9d6"; accent = "#e55300"
-
+    if activity_key == "Low": color = "#d8ecff"; accent = "#3478b6"
+    elif activity_key == "Moderate": color = "#e8f9e9"; accent = "#2e8b57"
+    else: color = "#ffe9d6"; accent = "#e55300"
     css = f"""
     <style>
     .stApp {{ background: {color}; color: #111 !important; }}
-
-    .summary-card {{
-        background: white; border-radius: 10px;
-        padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        font-weight: 600; color: #111;
-    }}
-    .highlight-box {{
-        border-left: 6px solid {accent};
-        padding:12px; border-radius:8px;
-        background: rgba(255,255,255,0.6);
-        font-weight: 600; color: #111;
-    }}
-
-    /* Recommended shoe & material boxes */
-    .rec-shoe {{
-        background-color: #b8f5c1 !important; /* pastel green */
-        color: #000 !important;
-        font-weight: bold;
-        font-size: 1.2em;
-        border-radius: 8px;
-        padding: 10px;
-    }}
-    .rec-material {{
-        background-color: #cfe9ff !important; /* pastel blue */
-        color: #000 !important;
-        font-weight: bold;
-        font-size: 1.1em;
-        border-radius: 8px;
-        padding: 10px;
-    }}
-
-    /* Buttons — pastel violet */
-    .stButton>button {{
-        background-color: #d9c2f0 !important;
-        color: black !important;
-        border: 1px solid #b495d6 !important;
-        border-radius: 6px;
-        font-weight: 600 !important;
-    }}
-    .stButton>button:hover {{
-        background-color: #cbb3eb !important;
-    }}
-
-    /* Stronger selector for checkbox label to ensure orange colour */
-    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {{
-        color: orange !important;
-        font-weight: bold !important;
-        opacity: 1 !important;
-    }}
+    .summary-card {{ background: white; border-radius: 10px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); font-weight: 600; color: #111; }}
+    .highlight-box {{ border-left: 6px solid {accent}; padding:12px; border-radius:8px; background: rgba(255,255,255,0.6); font-weight: 600; color: #111; }}
+    .rec-shoe {{ background-color: #b8f5c1 !important; color: #000 !important; font-weight: bold; font-size: 1.2em; border-radius: 8px; padding: 10px; }}
+    .rec-material {{ background-color: #cfe9ff !important; color: #000 !important; font-weight: bold; font-size: 1.1em; border-radius: 8px; padding: 10px; }}
+    .stButton>button {{ background-color: #d9c2f0 !important; color: black !important; border: 1px solid #b495d6 !important; border-radius: 6px; font-weight: 600 !important; }}
+    .stButton>button:hover {{ background-color: #cbb3eb !important; }}
+    div.stCheckbox label, div.stCheckbox div[data-testid="stMarkdownContainer"] {{ color: orange !important; font-weight: bold !important; opacity: 1 !important; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -237,16 +128,12 @@ def set_activity_theme(activity_key):
 # ---------------------------
 # Session initialization
 # ---------------------------
-if 'step' not in st.session_state:
-    st.session_state.step = 1
-if 'inputs' not in st.session_state:
-    st.session_state.inputs = {}
-if 'analyze_clicked' not in st.session_state:
-    st.session_state.analyze_clicked = False
-if 'foot_type' not in st.session_state:
-    st.session_state.foot_type = "Normal Arch"
-if 'footwear_pref' not in st.session_state:
-    st.session_state.footwear_pref = "Running shoes"
+if 'step' not in st.session_state: st.session_state.step = 1
+if 'inputs' not in st.session_state: st.session_state.inputs = {}
+if 'analyze_clicked' not in st.session_state: st.session_state.analyze_clicked = False
+if 'foot_type' not in st.session_state: st.session_state.foot_type = "Normal Arch"
+if 'footwear_pref' not in st.session_state: st.session_state.footwear_pref = "Running shoes"
+if 'greeting_done' not in st.session_state: st.session_state.greeting_done = False  # NEW
 
 # ---------------------------
 # Header
@@ -254,10 +141,8 @@ if 'footwear_pref' not in st.session_state:
 col1, col2 = st.columns([1, 8])
 with col1:
     logo = load_image("logo.png")
-    if logo:
-        st.image(logo, width=100)
-    else:
-        st.markdown("<h3>👟 FootFit Analyzer</h3>", unsafe_allow_html=True)
+    if logo: st.image(logo, width=100)
+    else: st.markdown("<h3>👟 FootFit Analyzer</h3>", unsafe_allow_html=True)
 with col2:
     st.markdown("<h1 style='margin-top:8px'>FootFit Analyzer — Biomechanics Footwear Profiler</h1>", unsafe_allow_html=True)
 st.write("A biomechanics-informed recommender that suggests shoe brand, materials and explains why.")
@@ -277,11 +162,7 @@ if st.session_state.step == 1:
     next_col1, next_col2 = st.columns([1,1])
     with next_col2:
         if st.button("Next →", key="to_step2"):
-            st.session_state.inputs.update({
-                "age_group": age_label,
-                "gender": gender_label,
-                "weight_group": weight_label,
-            })
+            st.session_state.inputs.update({"age_group": age_label, "gender": gender_label, "weight_group": weight_label})
             st.session_state.step = 2
 
 # ---------------------------
@@ -297,9 +178,7 @@ elif st.session_state.step == 2:
         index=1
     )
     st.session_state.inputs["activity_label"] = activity_label
-    st.session_state.inputs["activity_key"] = (
-        "Low" if "Low" in activity_label else ("Moderate" if "Moderate" in activity_label else "High")
-    )
+    st.session_state.inputs["activity_key"] = ("Low" if "Low" in activity_label else ("Moderate" if "Moderate" in activity_label else "High"))
 
     st.subheader("👣 Foot Type — choose one")
     foot_options = [("Flat Arch","flat.png"), ("Normal Arch","normal.png"), ("High Arch","high_arch.png")]
@@ -307,9 +186,7 @@ elif st.session_state.step == 2:
     for (label, imgfile), col in zip(foot_options, cols):
         with col:
             img = load_image(imgfile)
-            selected = (st.session_state.foot_type == label)
-            if img:
-                st.image(img, caption=label, width=140)
+            if img: st.image(img, caption=label, width=140)
             if st.button(label, key=f"ftbtn_{label}"):
                 st.session_state.foot_type = label
                 st.session_state.inputs["foot_type"] = label
@@ -326,11 +203,9 @@ elif st.session_state.step == 2:
 
     back_col, next_col = st.columns([1,1])
     with back_col:
-        if st.button("← Back", key="back_step1"):
-            st.session_state.step = 1
+        if st.button("← Back", key="back_step1"): st.session_state.step = 1
     with next_col:
-        if st.button("Next →", key="to_step3"):
-            st.session_state.step = 3
+        if st.button("Next →", key="to_step3"): st.session_state.step = 3
 
 # ---------------------------
 # STEP 3 — Recommendation
@@ -338,8 +213,7 @@ elif st.session_state.step == 2:
 elif st.session_state.step == 3:
     st.header("Step 3 — Recommendation & Biomechanics Summary")
 
-    def get_val(key, default):
-        return st.session_state.inputs.get(key, st.session_state.get(key, default))
+    def get_val(key, default): return st.session_state.inputs.get(key, st.session_state.get(key, default))
 
     age_group = get_val("age_group", "18–25")
     gender = get_val("gender", "Male")
@@ -351,10 +225,20 @@ elif st.session_state.step == 3:
 
     set_activity_theme(activity_key)
 
+    # --------- NEW: Greeting by age + gender ---------
+    if not st.session_state.greeting_done:
+        greeting_msg = f"Hello {'young' if 'Under 18' in age_group else 'runner' if '18–25' in age_group else 'athlete'} {gender}!"
+        st.markdown(f"<h2 style='color:#ff5722;'>{greeting_msg}</h2>", unsafe_allow_html=True)
+        speak_text(greeting_msg)
+        st.session_state.greeting_done = True
+
+        # Walking GIF from URL
+        gif_url = "https://i.pinimg.com/originals/e8/ef/28/e8ef28560911f51810df9b0581819650.gif"
+        st.markdown(f"<img src='{gif_url}' width='220' style='border-radius:8px;'/>", unsafe_allow_html=True)
+
     col_a1, col_a2, col_a3 = st.columns([1,1,2])
     with col_a1:
-        if st.button("Analyze", key="analyze_btn"):
-            st.session_state.analyze_clicked = True
+        if st.button("Analyze", key="analyze_btn"): st.session_state.analyze_clicked = True
     with col_a3:
         if st.button("🔁 Start Over", key="start_over"):
             st.session_state.step = 1
@@ -362,33 +246,13 @@ elif st.session_state.step == 3:
             st.session_state.foot_type = "Normal Arch"
             st.session_state.footwear_pref = "Running shoes"
             st.session_state.analyze_clicked = False
+            st.session_state.greeting_done = False  # reset greeting
 
     brand, material, justification = recommend(
         foot_type, weight_group, activity_label, footwear_pref, age_group, gender
     )
 
     if st.session_state.analyze_clicked:
-        # ---- NEW: greeting (age + gender) AND voice ----
-        greet_text = greeting_message(age_group, gender)
-        st.markdown(f"<h3 style='color:#6a0dad; font-weight:700;'>{greet_text}</h3>", unsafe_allow_html=True)
-        speak_text(greet_text)
-
-        # ---- NEW: show GIF: local walking.gif if present, otherwise use the provided URL ----
-        gif_local_path = os.path.join(IMAGE_DIR, "walking.gif")
-        if os.path.exists(gif_local_path):
-            st.markdown(
-                f"<img src='{gif_local_path}' width='220' style='border-radius:8px; margin-bottom:10px;'/>",
-                unsafe_allow_html=True,
-            )
-        else:
-            # fallback to the online URL you gave
-            gif_url = "https://i.pinimg.com/originals/e8/ef/28/e8ef28560911f51810df9b0581819650.gif"
-            st.markdown(
-                f"<img src='{gif_url}' width='220' style='border-radius:8px; margin-bottom:10px;'/>",
-                unsafe_allow_html=True,
-            )
-
-        # keep the existing speak_text about recommendation (unchanged content)
         speak_text(f"Recommendation ready. {brand} recommended.")
 
     summary_md = f"""
