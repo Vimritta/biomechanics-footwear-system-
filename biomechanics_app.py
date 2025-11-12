@@ -482,26 +482,32 @@ elif st.session_state.step == 3:
         st.markdown(html_images, unsafe_allow_html=True)
 
     # ---------------------------
-    # Voice Assistant — Multilingual
-    # ---------------------------
-    voice_lang = st.selectbox(
-        "Choose Voice Language / மொழி / භාෂාව",
-        ["English", "Tamil", "Sinhala"]
-    )
-    lang_code = {"English": "en", "Tamil": "ta", "Sinhala": "si"}[voice_lang]
+# Multilingual Text-to-Speech
+# ---------------------------
+from gtts import gTTS
+import tempfile
+import streamlit as st
+from pathlib import Path
+import base64
 
-    if st.checkbox("🔊 Read recommendation aloud"):
-        # Greeting in native language
-        greetings = {
-            "English": "Hello!",
-            "Tamil": "வணக்கம்!",
-            "Sinhala": "ආයුබෝවන්!"
-        }
-        greeting = greetings.get(voice_lang, "Hello!")
-
-        # Full text to speak
-        speech_text = f"{greeting} Recommendation: {brand}. Material: {material}. Justification: {justification}. Tip of the Day: {tip_text}"
-        speak_multilang(speech_text, lang=lang_code)
-
-    if st.button("← Back", key="back_to_step2"):
-        st.session_state.step = 2
+def speak_multilang(text, lang="en"):
+    """
+    Generate speech in the chosen language using gTTS and play in Streamlit.
+    lang: "en" for English, "ta" for Tamil, "si" for Sinhala
+    """
+    try:
+        tts = gTTS(text=text, lang=lang)
+        # Save to temporary file
+        tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+        tts.save(tmp_file.name)
+        tmp_file.close()
+        
+        # Play in Streamlit
+        audio_file = Path(tmp_file.name)
+        audio_bytes = audio_file.read_bytes()
+        st.audio(audio_bytes, format="audio/mp3")
+        
+        # Optional: delete temp file if you want
+        audio_file.unlink()
+    except Exception as e:
+        st.error(f"Text-to-Speech error: {e}")
