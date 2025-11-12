@@ -333,6 +333,23 @@ elif st.session_state.step == 3:
 
     set_activity_theme(activity_key)
 
+    # ---------------------------
+    # Greeting by age group
+    # ---------------------------
+    greeting_dict = {
+        "Under 18": "Hello, young runner! 🏃‍♂️",
+        "18–25": "Hello, energetic athlete! 💪",
+        "26–35": "Hello, active professional! 👟",
+        "36–50": "Hello, seasoned runner! 🏃",
+        "51–65": "Hello, fitness enthusiast! 🧘",
+        "Over 65": "Hello, golden walker! 🌟"
+    }
+    greeting_msg = greeting_dict.get(age_group, "Hello! Welcome to FootFit Analyzer!")
+    st.markdown(f"<h3 style='color:#3478b6;'>{greeting_msg}</h3>", unsafe_allow_html=True)
+
+    # Voice reading of the greeting
+    speak_text(greeting_msg)
+
     col_a1, col_a2, col_a3 = st.columns([1,1,2])
     with col_a1:
         if st.button("Analyze", key="analyze_btn"):
@@ -350,6 +367,7 @@ elif st.session_state.step == 3:
     )
 
     if st.session_state.analyze_clicked:
+        # Optional GIF display
         gif_path = os.path.join(IMAGE_DIR, "walking.gif")
         if os.path.exists(gif_path):
             st.markdown(
@@ -358,6 +376,9 @@ elif st.session_state.step == 3:
             )
         speak_text(f"Recommendation ready. {brand} recommended.")
 
+    # ---------------------------
+    # Existing summary card, recommendations, justification, tips, download
+    # ---------------------------
     summary_md = f"""
     <div class="summary-card">
       <h3>🧠 <b>Biomechanics Summary</b></h3>
@@ -376,7 +397,7 @@ elif st.session_state.step == 3:
         st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
 
-        # 🟤 Brown pastel Justification box (escaped for safety)
+        # 🟤 Brown pastel Justification box
         justification_safe = html_mod.escape(justification)
         st.markdown(
             (
@@ -470,3 +491,4 @@ elif st.session_state.step == 3:
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
+
