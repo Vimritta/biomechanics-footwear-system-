@@ -16,26 +16,27 @@ IMAGE_DIR = "images"
 # ---------------------------
 # Helpers
 # ---------------------------
-def load_image(name):
-    path = os.path.join(IMAGE_DIR, name)
-    try:
-        if os.path.exists(path):
-            return Image.open(path)
-    except Exception:
-        pass
-    return None
-
-def speak_text_multilang(justification, tip_text, lang='en'):
-    """
-    Speak justification and tip in selected language, with greeting
-    """
+def speak_text_multilang(justification, tip, lang="en"):
+    # Greeting in native language
     greetings = {
-        'en': "Hello!",
-        'si': "ආයුබෝවන්!",    # Sinhala
-        'ta': "வணக்கம்!"       # Tamil
+        "en": "Hello! ",
+        "si": "ආයුබෝවන්! ",  # Sinhala
+        "ta": "வணக்கம்! "     # Tamil
     }
-    greeting = greetings.get(lang, "Hello!")
-    full_text = f"{greeting} {justification} Tip of the day: {tip_text}."
+    greeting = greetings.get(lang, "Hello! ")
+
+    text_to_speak = f"{greeting} {justification} Tip of the Day: {tip}"
+    
+    html = f"""
+    <script>
+    const msg = new SpeechSynthesisUtterance({repr(text_to_speak)});
+    msg.lang = '{lang}';
+    msg.rate = 1.0;
+    window.speechSynthesis.speak(msg);
+    </script>
+    """
+    st.components.v1.html(html, height=0)
+
     
     # Web Speech API for browser TTS
     html = f"""
@@ -350,9 +351,14 @@ elif st.session_state.step == 3:
     # ---------------------------
     # Language selection for TTS
     # ---------------------------
-    st.subheader("Select voice language for reading recommendation")
-    voice_lang = st.radio("Language:", ["English", "Sinhala", "Tamil"], index=0)
-    st.session_state.voice_lang = {'English':'en','Sinhala':'si','Tamil':'ta'}[voice_lang]
+  st.subheader("🔊 Voice Assistant Language")
+voice_lang = st.selectbox(
+    "Choose language for reading recommendation:",
+    ["English", "Sinhala", "Tamil"]
+)
+lang_code = "en" if voice_lang == "English" else ("si" if voice_lang == "Sinhala" else "ta")
+st.session_state.voice_lang = lang_code
+
 
     col_a1, col_a2, col_a3 = st.columns([1,1,2])
     with col_a1:
