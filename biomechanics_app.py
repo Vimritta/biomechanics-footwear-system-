@@ -387,8 +387,6 @@ elif st.session_state.step == 3:
                 f"<img src='{gif_path}' width='220' style='border-radius:8px;'/>",
                 unsafe_allow_html=True,
             )
-        # ✅ Multilingual TTS for justification + tip
-        speak_text_multilang(justification, tip_text, lang=st.session_state.voice_lang)
 
     summary_md = f"""
     <div class="summary-card">
@@ -408,41 +406,56 @@ elif st.session_state.step == 3:
         st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
 
-        # 🟤 Brown pastel Justification box
+        # 🟤 Justification box
         justification_safe = html_mod.escape(justification)
         st.markdown(
             (
-                "<div style=\""
-                "background-color:#d2b48c;"
-                "border-left:6px solid #8b6f47;"
-                "padding:10px 14px;"
-                "border-radius:8px;"
-                "margin-top:8px;"
-                "font-weight:600;"
-                "color:#222;"
-                "\">"
-                "💬 Justification: " + justification_safe +
+                "<div style=\"background-color:#d2b48c;border-left:6px solid #8b6f47;"
+                "padding:10px 14px;border-radius:8px;margin-top:8px;font-weight:600;color:#222;"
+                "\">💬 Justification: " + justification_safe +
                 "</div>"
             ),
             unsafe_allow_html=True,
         )
 
-        # ✅ Yellow pastel Tip of the Day box
+        # ✅ Tip box
         st.markdown(
-            f"""
-            <div style="
-                background-color:#fff9c4;
-                border-left:6px solid #ffd54f;
-                padding:10px 14px;
-                border-radius:8px;
-                margin-top:8px;
-                font-weight:600;
-                color:#333;">
-                💡 Tip of the Day: {tip_text}
-            </div>
-            """,
+            f"<div style='background-color:#fff9c4;border-left:6px solid #ffd54f;"
+            f"padding:10px 14px;border-radius:8px;margin-top:8px;font-weight:600;color:#333;'>"
+            f"💡 Tip of the Day: {tip_text}</div>",
             unsafe_allow_html=True,
         )
+
+        # ✅ Download button
+        summary_text = textwrap.dedent(f"""
+        FootFit Analyzer - Recommendation
+        ---------------------------------
+        Age group: {age_group}
+        Gender: {gender}
+        Weight group: {weight_group}
+        Activity level: {activity_label}
+        Foot type: {foot_type}
+        Preferred footwear: {footwear_pref}
+
+        Recommended Shoe: {brand}
+        Material: {material}
+        Justification: {justification}
+        Tip of the Day: {tip_text}
+        """)
+        b64 = base64.b64encode(summary_text.encode()).decode()
+        download_href = f"""
+        <a download="footfit_recommendation.txt" href="data:text/plain;base64,{b64}"
+           style="background-color:#ff4da6; color:white; padding:10px 14px; border-radius:8px;
+                  text-decoration:none; font-weight:bold; display:inline-block;">
+           📄 Download Recommendation (txt)
+        </a>
+        """
+        st.markdown(download_href, unsafe_allow_html=True)
+
+        # 🔊 Read aloud checkbox
+        read_aloud = st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
+        if read_aloud or st.session_state.analyze_clicked:
+            speak_text_multilang(justification, tip_text, lang=st.session_state.voice_lang)
 
         summary_text
 
