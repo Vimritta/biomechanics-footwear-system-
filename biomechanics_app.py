@@ -358,7 +358,7 @@ elif st.session_state.step == 3:
         if st.session_state.get("read_aloud", False):
             speak_text(f"I recommend {brand}. Material: {material}. {justification}")
 
-    with rec_col2:
+   with rec_col2:
     st.subheader("👟 Virtual Shoe Wall")
 
     shoe_wall_urls = {
@@ -383,7 +383,8 @@ elif st.session_state.step == 3:
     if st.session_state.get("read_aloud", False):
         speak_text(f"I recommend {brand}. Material: {material}. {justification}")
 
-    # Move Back button here, after Read Aloud
+    # Back button moved here after Read Aloud
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
+
 
