@@ -354,37 +354,34 @@ elif st.session_state.step == 3:
         """
         st.markdown(download_href, unsafe_allow_html=True)
 
+    with rec_col2:
+        st.subheader("👟 Virtual Shoe Wall")
+
+        shoe_wall_urls = {
+            "Running shoes": ["https://cdn.thewirecutter.com/wp-content/media/2024/11/runningshoes-2048px-09522.jpg?auto=webp&quality=75&width=1024"],
+            "Cross-training shoes": ["https://marathonhandbook.com/wp-content/uploads/cross-training-shoes-3.jpg"],
+            "Casual/fashion sneakers": ["https://t3.ftcdn.net/jpg/01/88/73/94/360_F_188739476_0ya1CUvG0a6JN5gQnonzEbrFDyBNX5iO.jpg"],
+            "Sandals or slippers": ["https://st2.depositphotos.com/4678277/8421/i/450/depositphotos_84214128-stock-photo-legs-of-loving-couples-on.jpg"]
+        }
+
+        selected_urls = shoe_wall_urls.get(footwear_pref, [])
+        html_images = "<div style='display:flex; flex-wrap:wrap;'>"
+        for url in selected_urls:
+            html_images += f"""
+            <div style='flex:1 0 45%; margin:5px;'>
+                <img src='{url}' width='160' style='border-radius:8px;'/>
+            </div>
+            """
+        html_images += "</div>"
+        st.markdown(html_images, unsafe_allow_html=True)
+
         st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
         if st.session_state.get("read_aloud", False):
             speak_text(f"I recommend {brand}. Material: {material}. {justification}")
 
-   with rec_col2:
-    st.subheader("👟 Virtual Shoe Wall")
-
-    shoe_wall_urls = {
-        "Running shoes": ["https://cdn.thewirecutter.com/wp-content/media/2024/11/runningshoes-2048px-09522.jpg?auto=webp&quality=75&width=1024"],
-        "Cross-training shoes": ["https://marathonhandbook.com/wp-content/uploads/cross-training-shoes-3.jpg"],
-        "Casual/fashion sneakers": ["https://t3.ftcdn.net/jpg/01/88/73/94/360_F_188739476_0ya1CUvG0a6JN5gQnonzEbrFDyBNX5iO.jpg"],
-        "Sandals or slippers": ["https://st2.depositphotos.com/4678277/8421/i/450/depositphotos_84214128-stock-photo-legs-of-loving-couples-on.jpg"]
-    }
-
-    selected_urls = shoe_wall_urls.get(footwear_pref, [])
-    html_images = "<div style='display:flex; flex-wrap:wrap;'>"
-    for url in selected_urls:
-        html_images += f"""
-        <div style='flex:1 0 45%; margin:5px;'>
-            <img src='{url}' width='160' style='border-radius:8px;'/>
-        </div>
-        """
-    html_images += "</div>"
-    st.markdown(html_images, unsafe_allow_html=True)
-
-    st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
-    if st.session_state.get("read_aloud", False):
-        speak_text(f"I recommend {brand}. Material: {material}. {justification}")
-
-    # Back button moved here after Read Aloud
-    if st.button("← Back", key="back_to_step2"):
-        st.session_state.step = 2
+        # Move Back button **after** Read Aloud
+        if st.button("← Back", key="back_to_step2"):
+            st.session_state.step = 2
 
 
+  
