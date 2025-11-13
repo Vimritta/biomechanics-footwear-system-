@@ -225,9 +225,7 @@ elif st.session_state.step == 3:
 
     set_activity_theme(activity_key)
 
-    # ---------------------------
-    # 🎤 Age + Gender–based greeting (NEW unique style)
-    # ---------------------------
+    # 🎤 Age + Gender–based greeting
     def get_greeting(age, gender):
         if "Under 18" in age:
             if gender == "Male":
@@ -261,8 +259,6 @@ elif st.session_state.step == 3:
 
     greeting_text = get_greeting(age_group, gender)
     st.markdown(f"<h4 style='color:#5e3a96; font-weight:700;'>{greeting_text}</h4>", unsafe_allow_html=True)
-
-    # Speak the greeting aloud automatically
     speak_text(greeting_text)
 
     # Walking GIF
@@ -272,9 +268,7 @@ elif st.session_state.step == 3:
         unsafe_allow_html=True,
     )
 
-    # ---------------------------
     # Analyze & Restart buttons
-    # ---------------------------
     col_a1, col_a2, col_a3 = st.columns([1, 1, 2])
     with col_a1:
         if st.button("Analyze", key="analyze_btn"):
@@ -287,9 +281,7 @@ elif st.session_state.step == 3:
             st.session_state.footwear_pref = "Running shoes"
             st.session_state.analyze_clicked = False
 
-    # ---------------------------
     # Main Recommendation
-    # ---------------------------
     brand, material, justification = recommend(
         foot_type, weight_group, activity_label, footwear_pref, age_group, gender
     )
@@ -297,9 +289,7 @@ elif st.session_state.step == 3:
     if st.session_state.analyze_clicked:
         speak_text(f"Recommendation ready. {brand} recommended.")
 
-    # ---------------------------
     # Biomechanics Summary Box
-    # ---------------------------
     summary_md = f"""
     <div class="summary-card">
       <h3>🧠 <b>Biomechanics Summary</b></h3>
@@ -313,15 +303,14 @@ elif st.session_state.step == 3:
     st.markdown(summary_md, unsafe_allow_html=True)
     st.markdown("---")
 
-    # ---------------------------
-    # Recommendation boxes, Tip, Download, Virtual Shoe Wall, and Read-Aloud
-    # ---------------------------
+    # Columns for Recommendation and Virtual Shoe Wall
     rec_col1, rec_col2 = st.columns([2, 1])
+
+    # LEFT COLUMN: recommendations, tips, download
     with rec_col1:
         st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
 
-        import html as html_mod
         justification_safe = html_mod.escape(justification)
         st.markdown(
             f"""
@@ -339,7 +328,6 @@ elif st.session_state.step == 3:
             unsafe_allow_html=True,
         )
 
-        import random, textwrap, base64
         tips = [
             "Stretch your calves daily to reduce heel strain.",
             "Replace running shoes every 500–800 km.",
@@ -388,33 +376,30 @@ elif st.session_state.step == 3:
         """
         st.markdown(download_href, unsafe_allow_html=True)
 
-with rec_col2:
-    st.subheader("👟 Virtual Shoe Wall")
+    # RIGHT COLUMN: Virtual Shoe Wall
+    with rec_col2:
+        st.subheader("👟 Virtual Shoe Wall")
 
-    # Map footwear type to online image URLs
-    shoe_wall_urls = {
-        "Running shoes": ["https://cdn.thewirecutter.com/wp-content/media/2024/11/runningshoes-2048px-09522.jpg?auto=webp&quality=75&width=1024"],
-        "Cross-training shoes": ["https://marathonhandbook.com/wp-content/uploads/cross-training-shoes-3.jpg"],
-        "Casual/fashion sneakers": ["https://t3.ftcdn.net/jpg/01/88/73/94/360_F_188739476_0ya1CUvG0a6JN5gQnonzEbrFDyBNX5iO.jpg"],
-        "Sandals or slippers": ["https://st2.depositphotos.com/4678277/8421/i/450/depositphotos_84214128-stock-photo-legs-of-loving-couples-on.jpg"]
-    }
+        shoe_wall_urls = {
+            "Running shoes": ["https://cdn.thewirecutter.com/wp-content/media/2024/11/runningshoes-2048px-09522.jpg?auto=webp&quality=75&width=1024"],
+            "Cross-training shoes": ["https://marathonhandbook.com/wp-content/uploads/cross-training-shoes-3.jpg"],
+            "Casual/fashion sneakers": ["https://t3.ftcdn.net/jpg/01/88/73/94/360_F_188739476_0ya1CUvG0a6JN5gQnonzEbrFDyBNX5iO.jpg"],
+            "Sandals or slippers": ["https://st2.depositphotos.com/4678277/8421/i/450/depositphotos_84214128-stock-photo-legs-of-loving-couples-on.jpg"]
+        }
 
-    selected_urls = shoe_wall_urls.get(footwear_pref, [])
+        selected_urls = shoe_wall_urls.get(footwear_pref, [])
+        cols = st.columns(2)
+        for idx, url in enumerate(selected_urls):
+            with cols[idx % 2]:
+                st.image(url, width=120)
 
-    # Display images in columns (2 per row)
-    cols = st.columns(2)
-    for idx, url in enumerate(selected_urls):
-        with cols[idx % 2]:
-            st.image(url, width=120)
+        st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
+        if st.session_state.get("read_aloud", False):
+            speak_text(f"I recommend {brand}. Material: {material}. {justification}")
 
+        if st.button("← Back", key="back_to_step2"):
+            st.session_state.step = 2
 
-
-    st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
-    if st.session_state.get("read_aloud", False):
-        speak_text(f"I recommend {brand}. Material: {material}. {justification}")
-
-    if st.button("← Back", key="back_to_step2"):
-        st.session_state.step = 2
 
 
 
