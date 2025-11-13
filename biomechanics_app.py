@@ -226,37 +226,37 @@ elif st.session_state.step == 3:
     set_activity_theme(activity_key)
 
     # ---------------------------
-    # Age + Gender–based greeting
+    # 🎤 Age + Gender–based greeting (NEW unique style)
     # ---------------------------
     def get_greeting(age, gender):
         if "Under 18" in age:
             if gender == "Male":
-                return "Hey young champ! Ready to step up?"
+                return "Yo champ! Ready to kick off your style?"
             elif gender == "Female":
-                return "Hey young star! Ready to shine?"
+                return "Hey superstar! Let’s make your feet dance in comfort!"
             else:
-                return "Hey there! Ready to move?"
+                return "Hey friend! Let’s get you moving in style!"
         elif "18–25" in age:
             if gender == "Male":
-                return "Hello, young runner!"
+                return "What’s up, young runner? Let’s hit the ground in comfort!"
             elif gender == "Female":
-                return "Hello, young athlete!"
+                return "Hi there, young athlete! Ready to shine with your perfect fit?"
             else:
-                return "Hello there! Ready to get moving?"
+                return "Hello friend! Let’s get you that winning comfort!"
         elif any(x in age for x in ["26–35", "36–50"]):
             if gender == "Male":
-                return "Hi there, active gentleman!"
+                return "Hey there! Time to power your day with the right shoes."
             elif gender == "Female":
-                return "Hi there, active lady!"
+                return "Hi stylish one! Let’s find comfort that keeps up with you."
             else:
-                return "Hi there! Let’s find your perfect fit!"
+                return "Hi there! Let’s get those feet happy again."
         elif any(x in age for x in ["51–65", "Over 65"]):
             if gender == "Male":
-                return "Welcome, wise walker! Let’s make each step easy."
+                return "Hello, wise soul! Your next step deserves the best care."
             elif gender == "Female":
-                return "Welcome, graceful walker! Let’s make each step easy."
+                return "Hello there, graceful one! Let’s make walking feel magical again."
             else:
-                return "Welcome! Let’s choose the best shoes for easy walking."
+                return "Welcome! Comfort and care in every step — just for you."
         return "Hello there! Let’s find your fit!"
 
     greeting_text = get_greeting(age_group, gender)
@@ -265,7 +265,7 @@ elif st.session_state.step == 3:
     # Speak the greeting aloud automatically
     speak_text(greeting_text)
 
-    # Walking GIF display (always from the URL you provided)
+    # Walking GIF
     st.markdown(
         "<img src='https://i.pinimg.com/originals/e8/ef/28/e8ef28560911f51810df9b0581819650.gif' "
         "width='250' style='border-radius:10px; margin-bottom:10px;'/>",
@@ -314,14 +314,13 @@ elif st.session_state.step == 3:
     st.markdown("---")
 
     # ---------------------------
-    # Recommendation boxes
+    # Recommendation boxes, Tip, Download, Virtual Shoe Wall, and Read-Aloud
     # ---------------------------
     rec_col1, rec_col2 = st.columns([2, 1])
     with rec_col1:
         st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
 
-        # Brown Justification Box
         import html as html_mod
         justification_safe = html_mod.escape(justification)
         st.markdown(
@@ -340,7 +339,7 @@ elif st.session_state.step == 3:
             unsafe_allow_html=True,
         )
 
-        # Yellow Tip Box
+        import random, textwrap, base64
         tips = [
             "Stretch your calves daily to reduce heel strain.",
             "Replace running shoes every 500–800 km.",
@@ -348,7 +347,6 @@ elif st.session_state.step == 3:
             "Air-dry shoes after workouts to prevent odor and damage.",
             "Perform ankle rotations to strengthen stabilizers."
         ]
-        import random, textwrap, base64
         tip_text = random.choice(tips)
         st.markdown(
             f"""
@@ -366,7 +364,6 @@ elif st.session_state.step == 3:
             unsafe_allow_html=True,
         )
 
-        # Download button (pink)
         summary_text = textwrap.dedent(f"""
         FootFit Analyzer - Recommendation
         ---------------------------------
@@ -391,9 +388,6 @@ elif st.session_state.step == 3:
         """
         st.markdown(download_href, unsafe_allow_html=True)
 
-    # ---------------------------
-    # Virtual Shoe Wall
-    # ---------------------------
     with rec_col2:
         st.subheader("👟 Virtual Shoe Wall")
         sample_map = {
@@ -411,15 +405,13 @@ elif st.session_state.step == 3:
         html_images += "</div>"
         st.markdown(html_images, unsafe_allow_html=True)
 
-    # ---------------------------
-    # Read-aloud Option (orange)
-    # ---------------------------
     st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
     if st.session_state.get("read_aloud", False):
         speak_text(f"I recommend {brand}. Material: {material}. {justification}")
 
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
+
 
 
 
