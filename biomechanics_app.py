@@ -388,7 +388,7 @@ elif st.session_state.step == 3:
         """
         st.markdown(download_href, unsafe_allow_html=True)
 
-    with rec_col2:
+   with rec_col2:
     st.subheader("👟 Virtual Shoe Wall")
     
     # Mapping footwear type to the online image URLs
