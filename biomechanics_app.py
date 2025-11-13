@@ -225,37 +225,16 @@ elif st.session_state.step == 3:
 
     set_activity_theme(activity_key)
 
-    # 🎤 Age + Gender–based greeting
+    # 🎤 Greeting
     def get_greeting(age, gender):
         if "Under 18" in age:
-            if gender == "Male":
-                return "Yo champ! Ready to kick off your style?"
-            elif gender == "Female":
-                return "Hey superstar! Let’s make your feet dance in comfort!"
-            else:
-                return "Hey friend! Let’s get you moving in style!"
+            return "Yo champ! Ready to kick off your style?" if gender=="Male" else "Hey superstar! Let’s make your feet dance in comfort!"
         elif "18–25" in age:
-            if gender == "Male":
-                return "What’s up, young runner? Let’s hit the ground in comfort!"
-            elif gender == "Female":
-                return "Hi there, young athlete! Ready to shine with your perfect fit?"
-            else:
-                return "Hello friend! Let’s get you that winning comfort!"
+            return "What’s up, young runner? Let’s hit the ground in comfort!" if gender=="Male" else "Hi there, young athlete! Ready to shine with your perfect fit?"
         elif any(x in age for x in ["26–35", "36–50"]):
-            if gender == "Male":
-                return "Hey there! Time to power your day with the right shoes."
-            elif gender == "Female":
-                return "Hi stylish one! Let’s find comfort that keeps up with you."
-            else:
-                return "Hi there! Let’s get those feet happy again."
-        elif any(x in age for x in ["51–65", "Over 65"]):
-            if gender == "Male":
-                return "Hello, wise soul! Your next step deserves the best care."
-            elif gender == "Female":
-                return "Hello there, graceful one! Let’s make walking feel magical again."
-            else:
-                return "Welcome! Comfort and care in every step — just for you."
-        return "Hello there! Let’s find your fit!"
+            return "Hey there! Time to power your day with the right shoes." if gender=="Male" else "Hi stylish one! Let’s find comfort that keeps up with you."
+        else:
+            return "Hello, wise soul! Your next step deserves the best care." if gender=="Male" else "Hello there, graceful one! Let’s make walking feel magical again."
 
     greeting_text = get_greeting(age_group, gender)
     st.markdown(f"<h4 style='color:#5e3a96; font-weight:700;'>{greeting_text}</h4>", unsafe_allow_html=True)
@@ -268,7 +247,7 @@ elif st.session_state.step == 3:
         unsafe_allow_html=True,
     )
 
-    # Analyze & Restart buttons
+    # Analyze & Start Over buttons
     col_a1, col_a2, col_a3 = st.columns([1, 1, 2])
     with col_a1:
         if st.button("Analyze", key="analyze_btn"):
@@ -281,15 +260,14 @@ elif st.session_state.step == 3:
             st.session_state.footwear_pref = "Running shoes"
             st.session_state.analyze_clicked = False
 
-    # Main Recommendation
+    # Recommendation logic
     brand, material, justification = recommend(
         foot_type, weight_group, activity_label, footwear_pref, age_group, gender
     )
-
     if st.session_state.analyze_clicked:
         speak_text(f"Recommendation ready. {brand} recommended.")
 
-    # Biomechanics Summary Box
+    # Biomechanics Summary
     summary_md = f"""
     <div class="summary-card">
       <h3>🧠 <b>Biomechanics Summary</b></h3>
@@ -303,14 +281,13 @@ elif st.session_state.step == 3:
     st.markdown(summary_md, unsafe_allow_html=True)
     st.markdown("---")
 
-    # Columns for Recommendation and Virtual Shoe Wall
+    # Recommendation boxes & Virtual Shoe Wall
     rec_col1, rec_col2 = st.columns([2, 1])
-
-    # LEFT COLUMN: recommendations, tips, download
     with rec_col1:
         st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
 
+        import html as html_mod
         justification_safe = html_mod.escape(justification)
         st.markdown(
             f"""
@@ -328,6 +305,7 @@ elif st.session_state.step == 3:
             unsafe_allow_html=True,
         )
 
+        import random, textwrap, base64
         tips = [
             "Stretch your calves daily to reduce heel strain.",
             "Replace running shoes every 500–800 km.",
@@ -376,7 +354,10 @@ elif st.session_state.step == 3:
         """
         st.markdown(download_href, unsafe_allow_html=True)
 
-    # RIGHT COLUMN: Virtual Shoe Wall
+        st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
+        if st.session_state.get("read_aloud", False):
+            speak_text(f"I recommend {brand}. Material: {material}. {justification}")
+
     with rec_col2:
         st.subheader("👟 Virtual Shoe Wall")
 
@@ -388,22 +369,15 @@ elif st.session_state.step == 3:
         }
 
         selected_urls = shoe_wall_urls.get(footwear_pref, [])
-        cols = st.columns(2)
-        for idx, url in enumerate(selected_urls):
-            with cols[idx % 2]:
-                st.image(url, width=120)
-
-        st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
-        if st.session_state.get("read_aloud", False):
-            speak_text(f"I recommend {brand}. Material: {material}. {justification}")
+        html_images = "<div style='display:flex; flex-wrap:wrap;'>"
+        for url in selected_urls:
+            html_images += f"""
+            <div style='flex:1 0 45%; margin:5px;'>
+                <img src='{url}' width='120' style='border-radius:8px;'/>
+            </div>
+            """
+        html_images += "</div>"
+        st.markdown(html_images, unsafe_allow_html=True)
 
         if st.button("← Back", key="back_to_step2"):
             st.session_state.step = 2
-
-
-
-
-
-
-
-
