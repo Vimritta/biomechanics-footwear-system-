@@ -389,21 +389,23 @@ elif st.session_state.step == 3:
         st.markdown(download_href, unsafe_allow_html=True)
 
     with rec_col2:
-        st.subheader("👟 Virtual Shoe Wall")
-        sample_map = {
-            "Running shoes": ["running1.png", "running2.png"],
-            "Cross-training shoes": ["cross1.png", "cross2.png"],
-            "Casual/fashion sneakers": ["casual1.png", "casual2.png"],
-            "Sandals or slippers": ["sandal1.png", "sandal2.png"]
-        }
-        imgs = sample_map.get(footwear_pref, [])
-        html_images = "<div style='display:flex; flex-wrap:wrap;'>"
-        for im in imgs:
-            p = os.path.join(IMAGE_DIR, im)
-            if os.path.exists(p):
-                html_images += f"<img src='{p}' width='110' style='margin:6px; border-radius:8px;'/>"
-        html_images += "</div>"
-        st.markdown(html_images, unsafe_allow_html=True)
+    st.subheader("👟 Virtual Shoe Wall")
+    
+    # Mapping footwear type to the online image URLs
+    shoe_urls = {
+        "Running shoes": ["https://cdn.thewirecutter.com/wp-content/media/2024/11/runningshoes-2048px-09522.jpg?auto=webp&quality=75&width=1024"],
+        "Cross-training shoes": ["https://marathonhandbook.com/wp-content/uploads/cross-training-shoes-3.jpg"],
+        "Casual/fashion sneakers": ["https://t3.ftcdn.net/jpg/01/88/73/94/360_F_188739476_0ya1CUvG0a6JN5gQnonzEbrFDyBNX5iO.jpg"],
+        "Sandals or slippers": ["https://st2.depositphotos.com/4678277/8421/i/450/depositphotos_84214128-stock-photo-legs-of-loving-couples-on.jpg"]
+    }
+
+    urls = shoe_urls.get(footwear_pref, [])
+    html_images = "<div style='display:flex; flex-wrap:wrap;'>"
+    for url in urls:
+        html_images += f"<img src='{url}' width='120' style='margin:6px; border-radius:8px;'/>"
+    html_images += "</div>"
+    st.markdown(html_images, unsafe_allow_html=True)
+
 
     st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
     if st.session_state.get("read_aloud", False):
