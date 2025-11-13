@@ -215,6 +215,7 @@ elif st.session_state.step == 3:
     def get_val(key, default):
         return st.session_state.inputs.get(key, st.session_state.get(key, default))
 
+    # Retrieve user inputs
     age_group = get_val("age_group", "18–25")
     gender = get_val("gender", "Male")
     weight_group = get_val("weight_group", "50–70 kg")
@@ -244,15 +245,20 @@ elif st.session_state.step == 3:
                 "Other": "Welcome! Let’s choose the best shoes for easy walking."}
     }
 
-    # Determine neutral/other key
-    gender_key = gender if gender in ["Male","Female"] else "Other"
-    if age_group in ["36–50", "51–65", "Over 65"]:
-        age_key = "41–60" if age_group in ["36–50","51–65"] else "60+"
+    # Map age ranges to greeting keys
+    if age_group in ["26–35", "36–50"]:
+        age_key = "26–40" if age_group == "26–35" else "41–60"
+    elif age_group in ["51–65", "Over 65"]:
+        age_key = "60+" if age_group == "Over 65" else "41–60"
     else:
         age_key = age_group
 
+    gender_key = gender if gender in ["Male", "Female"] else "Other"
     greeting_text = greetings.get(age_key, {}).get(gender_key, "Hello! Ready to get moving?")
+    
+    # Display greeting
     st.markdown(f"<h3 style='color:#5a2d82;'>{greeting_text}</h3>", unsafe_allow_html=True)
+    # Speak greeting automatically
     speak_text(greeting_text)
 
     # ---------------- Walking GIF ----------------
@@ -397,4 +403,5 @@ elif st.session_state.step == 3:
     # ---------------- Back ----------------
     if st.button("← Back", key="back_to_step2"):
         st.session_state.step = 2
+
 
