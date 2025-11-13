@@ -225,38 +225,37 @@ elif st.session_state.step == 3:
 
     set_activity_theme(activity_key)
 
-    # 🎤 Greeting
- # 🎤 Greeting
-def get_greeting(age, gender):
-    if "Under 18" in age:
-        if gender == "Male":
-            return "Yo champ! Ready to kick off your style?"
-        elif gender == "Female":
-            return "Hey superstar! Let’s make your feet dance in comfort!"
-        else:
-            return "Hey friend! Let’s get you moving in style!"
-    elif "18–25" in age:
-        if gender == "Male":
-            return "What’s up, young runner? Let’s hit the ground in comfort!"
-        elif gender == "Female":
-            return "Hi there, young athlete! Ready to shine with your perfect fit?"
-        else:
-            return "Hello friend! Let’s get you that winning comfort!"
-    elif any(x in age for x in ["26–35", "36–50"]):
-        if gender == "Male":
-            return "Hey there! Time to power your day with the right shoes."
-        elif gender == "Female":
-            return "Hi stylish one! Let’s find comfort that keeps up with you."
-        else:
-            return "Hi there! Let’s get those feet happy again."
-    elif any(x in age for x in ["51–65", "Over 65"]):
-        if gender == "Male":
-            return "Hello, wise soul! Your next step deserves the best care."
-        elif gender == "Female":
-            return "Hello there, graceful one! Let’s make walking feel magical again."
-        else:
-            return "Welcome! Comfort and care in every step — just for you."
-    return "Hello there! Let’s find your fit!"
+    # 🎤 Greeting with all age groups
+    def get_greeting(age, gender):
+        if "Under 18" in age:
+            if gender == "Male":
+                return "Yo champ! Ready to kick off your style?"
+            elif gender == "Female":
+                return "Hey superstar! Let’s make your feet dance in comfort!"
+            else:
+                return "Hey friend! Let’s get you moving in style!"
+        elif "18–25" in age:
+            if gender == "Male":
+                return "What’s up, young runner? Let’s hit the ground in comfort!"
+            elif gender == "Female":
+                return "Hi there, young athlete! Ready to shine with your perfect fit?"
+            else:
+                return "Hello friend! Let’s get you that winning comfort!"
+        elif any(x in age for x in ["26–35", "36–50"]):
+            if gender == "Male":
+                return "Hey there! Time to power your day with the right shoes."
+            elif gender == "Female":
+                return "Hi stylish one! Let’s find comfort that keeps up with you."
+            else:
+                return "Hi there! Let’s get those feet happy again."
+        elif any(x in age for x in ["51–65", "Over 65"]):
+            if gender == "Male":
+                return "Hello, wise soul! Your next step deserves the best care."
+            elif gender == "Female":
+                return "Hello there, graceful one! Let’s make walking feel magical again."
+            else:
+                return "Welcome! Comfort and care in every step — just for you."
+        return "Hello there! Let’s find your fit!"
 
     greeting_text = get_greeting(age_group, gender)
     st.markdown(f"<h4 style='color:#5e3a96; font-weight:700;'>{greeting_text}</h4>", unsafe_allow_html=True)
@@ -376,22 +375,31 @@ def get_greeting(age, gender):
         """
         st.markdown(download_href, unsafe_allow_html=True)
 
-        # ✅ Read Aloud + Back Button on LEFT below Download
-        st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
-        if st.session_state.get("read_aloud", False):
-            speak_text(f"I recommend {brand}. Material: {material}. {justification}")
-
-        if st.button("← Back", key="back_to_step2"):
-            st.session_state.step = 2
+        # Read-aloud & Back button aligned left
+        col_btn1, col_btn2 = st.columns([1, 4])
+        with col_btn1:
+            st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
+            if st.session_state.get("read_aloud", False):
+                speak_text(f"I recommend {brand}. Material: {material}. {justification}")
+            if st.button("← Back", key="back_to_step2"):
+                st.session_state.step = 2
 
     with rec_col2:
         st.subheader("👟 Virtual Shoe Wall")
 
         shoe_wall_urls = {
-            "Running shoes": ["https://cdn.thewirecutter.com/wp-content/media/2024/11/runningshoes-2048px-09522.jpg?auto=webp&quality=75&width=1024"],
-            "Cross-training shoes": ["https://marathonhandbook.com/wp-content/uploads/cross-training-shoes-3.jpg"],
-            "Casual/fashion sneakers": ["https://t3.ftcdn.net/jpg/01/88/73/94/360_F_188739476_0ya1CUvG0a6JN5gQnonzEbrFDyBNX5iO.jpg"],
-            "Sandals or slippers": ["https://st2.depositphotos.com/4678277/8421/i/450/depositphotos_84214128-stock-photo-legs-of-loving-couples-on.jpg"]
+            "Running shoes": [
+                "https://cdn.thewirecutter.com/wp-content/media/2024/11/runningshoes-2048px-09522.jpg?auto=webp&quality=75&width=1024"
+            ],
+            "Cross-training shoes": [
+                "https://marathonhandbook.com/wp-content/uploads/cross-training-shoes-3.jpg"
+            ],
+            "Casual/fashion sneakers": [
+                "https://t3.ftcdn.net/jpg/01/88/73/94/360_F_188739476_0ya1CUvG0a6JN5gQnonzEbrFDyBNX5iO.jpg"
+            ],
+            "Sandals or slippers": [
+                "https://st2.depositphotos.com/4678277/8421/i/450/depositphotos_84214128-stock-photo-legs-of-loving-couples-on.jpg"
+            ]
         }
 
         selected_urls = shoe_wall_urls.get(footwear_pref, [])
@@ -399,7 +407,7 @@ def get_greeting(age, gender):
         for url in selected_urls:
             html_images += f"""
             <div style='flex:1 0 45%; margin:5px;'>
-                <img src='{url}' width='200' style='border-radius:8px;'/>
+                <img src='{url}' width='180' style='border-radius:8px;'/>
             </div>
             """
         html_images += "</div>"
