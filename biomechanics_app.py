@@ -388,7 +388,7 @@ elif st.session_state.step == 3:
         """
         st.markdown(download_href, unsafe_allow_html=True)
 
- with rec_col2:
+with rec_col2:
     st.subheader("👟 Virtual Shoe Wall")
 
     # Map footwear type to online image URLs
@@ -401,12 +401,12 @@ elif st.session_state.step == 3:
 
     selected_urls = shoe_wall_urls.get(footwear_pref, [])
 
-    html_images = "<div style='display:flex; flex-wrap:wrap;'>"
-    for url in selected_urls:
-        html_images += f"<img src='{url}' width='120' style='margin:6px; border-radius:6px;'/>"
-    html_images += "</div>"
+    # Display images in columns (2 per row)
+    cols = st.columns(2)
+    for idx, url in enumerate(selected_urls):
+        with cols[idx % 2]:
+            st.image(url, width=120)
 
-    st.markdown(html_images, unsafe_allow_html=True)
 
 
     st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
