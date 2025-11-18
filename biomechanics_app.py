@@ -212,6 +212,7 @@ elif st.session_state.step == 2:
 elif st.session_state.step == 3:
     st.header("Step 3 — Recommendation & Biomechanics Summary")
 
+    # Helper
     def get_val(key, default):
         return st.session_state.inputs.get(key, st.session_state.get(key, default))
 
@@ -236,7 +237,7 @@ elif st.session_state.step == 3:
                 return "Hey friend! Let’s get you moving in style!"
         elif "18–25" in age:
             if gender == "Male":
-                return "What’s up, young runner? Let’s hit the ground in comfort!"
+                return "What's up, young runner? Let’s hit the ground in comfort!"
             elif gender == "Female":
                 return "Hi there, young athlete! Ready to shine with your perfect fit?"
             else:
@@ -261,74 +262,59 @@ elif st.session_state.step == 3:
     st.markdown(f"<h4 style='color:#5e3a96; font-weight:700;'>{greeting_text}</h4>", unsafe_allow_html=True)
     speak_text(greeting_text)
 
-    # Walking GIF
+    # GIF
     st.markdown(
         "<img src='https://i.pinimg.com/originals/e8/ef/28/e8ef28560911f51810df9b0581819650.gif' "
         "width='250' style='border-radius:10px; margin-bottom:10px;'/>",
         unsafe_allow_html=True,
     )
 
-    # ---------------------------
-    # Ensure Tip of the Day exists BEFORE Analyze (stable across reruns)
-    # ---------------------------
-    if "final_tip" not in st.session_state or st.session_state.get("final_tip") is None:
-        import random
-        _tips_pool = [
-            "Stretch your calves daily to reduce heel strain.",
-            "Replace running shoes every 500–800 km.",
-            "Use orthotic insoles when experiencing arch pain.",
-            "Air-dry shoes after workouts to prevent odor and damage.",
-            "Perform ankle rotations to strengthen stabilizers."
-        ]
-        # store a stable tip now so it's visible immediately and won't change on reruns
-        st.session_state.final_tip = random.choice(_tips_pool)
-
-    # Analyze & Start Over buttons
+    # Buttons
     col_a1, col_a2, col_a3 = st.columns([1, 1, 2])
     with col_a1:
         if st.button("Analyze", key="analyze_btn"):
-            # Generate and SAVE recommendation (only once when Analyze is pressed)
-            brand_gen, material_gen, justification_gen = recommend(
+            st.session_state.analyze_clicked = True
+
+            # Generate recommendation ONCE
+            brand, material, justification = recommend(
                 foot_type, weight_group, activity_label, footwear_pref, age_group, gender
             )
-            st.session_state.final_brand = brand_gen
-            st.session_state.final_material = material_gen
-            st.session_state.final_justification = justification_gen
+            st.session_state.saved_brand = brand
+            st.session_state.saved_material = material
+            st.session_state.saved_justification = justification
 
-            # ensure tip exists (Analyze could also refresh it if you prefer)
-            # (we keep the earlier tip if present to avoid surprises)
-            if not st.session_state.get("final_tip"):
-                import random
-                st.session_state.final_tip = random.choice([
-                    "Stretch your calves daily to reduce heel strain.",
-                    "Replace running shoes every 500–800 km.",
-                    "Use orthotic insoles when experiencing arch pain.",
-                    "Air-dry shoes after workouts to prevent odor and damage.",
-                    "Perform ankle rotations to strengthen stabilizers."
-                ])
+            # Generate Tip of the Day HERE only after Analyze
+            tips = [
+                "Stretch your calves daily to reduce heel strain.",
+                "Replace running shoes every 500–800 km.",
+                "Use orthotic insoles when experiencing arch pain.",
+                "Air-dry shoes after workouts to prevent odor and damage.",
+                "Perform ankle rotations to strengthen stabilizers."
+            ]
+            st.session_state.saved_tip = random.choice(tips)
 
-            st.session_state.analyze_clicked = True
-            # speak only after saving stable values
-            speak_text(f"Recommendation ready. {st.session_state.final_brand} recommended.")
     with col_a3:
         if st.button("🔁 Start Over", key="start_over"):
             st.session_state.step = 1
             st.session_state.inputs = {}
-            st.session_state.foot_type = "Normal Arch"
-            st.session_state.footwear_pref = "Running shoes"
             st.session_state.analyze_clicked = False
-            # clear saved recommendation and tip so new session is fresh
-            st.session_state.final_brand = None
-            st.session_state.final_material = None
-            st.session_state.final_justification = None
-            st.session_state.final_tip = None
+            st.session_state.saved_brand = None
+            st.session_state.saved_material = None
+            st.session_state.saved_justification = None
+            st.session_state.saved_tip = None
 
-    # Recommendation logic
-    # Use saved/stable values if available; do NOT call recommend() on every rerun
-    brand = st.session_state.get("final_brand")
-    material = st.session_state.get("final_material")
-    justification = st.session_state.get("final_justification")
-    tip_text = st.session_state.get("final_tip")
+    # If Analyze not clicked yet
+    if not st.session_state.get("analyze_clicked", False):
+        st.info("Click **Analyze** to generate your footwear recommendation.")
+        st.stop()
+
+    # Retrieve saved stable values
+    brand = st.session_state.saved_brand
+    material = st.session_state.saved_material
+    justification = st.session_state.saved_justification
+    tip_text = st.session_state.saved_tip
+
+    speak_text(f"Recommendation ready. {brand} recommended.")
 
     # Biomechanics Summary
     summary_md = f"""
@@ -344,57 +330,44 @@ elif st.session_state.step == 3:
     st.markdown(summary_md, unsafe_allow_html=True)
     st.markdown("---")
 
-    # Recommendation boxes & Virtual Shoe Wall
+    # Recommendation + Tip
     rec_col1, rec_col2 = st.columns([2, 1])
     with rec_col1:
-        # If Analyze hasn't been clicked yet, show placeholders for recommendation parts
-        display_brand = brand if brand is not None else "— (click Analyze to generate recommendation)"
-        display_material = material if material is not None else "—"
-        display_justification = justification if justification is not None else "—"
-
-        st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {display_brand}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {display_material}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
 
         import html as html_mod
-        justification_safe = html_mod.escape(display_justification)
+        justification_safe = html_mod.escape(justification)
         st.markdown(
             f"""
             <div style="
-                background-color:#d2b48c;
-                border-left:6px solid #8b6f47;
-                padding:10px 14px;
-                border-radius:8px;
-                margin-top:8px;
-                font-weight:600;
-                color:#222;">
+                background-color:#d2b48c; border-left:6px solid #8b6f47;
+                padding:10px 14px; border-radius:8px; margin-top:8px;
+                font-weight:600; color:#222;">
                 💬 Justification: {justification_safe}
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        import random, textwrap, base64
-        # Use stable tip_text (generated earlier) so it appears before Analyze
-        tip_text = tip_text if tip_text is not None else "Tip will appear here. Click Analyze to generate recommendation."
+        # TIP (generated only after Analyze)
         st.markdown(
             f"""
             <div style="
-                background-color:#fff9c4;
-                border-left:6px solid #ffd54f;
-                padding:10px 14px;
-                border-radius:8px;
-                margin-top:8px;
-                font-weight:600;
-                color:#333;">
+                background-color:#fff9c4; border-left:6px solid #ffd54f;
+                padding:10px 14px; border-radius:8px; margin-top:8px;
+                font-weight:600; color:#333;">
                 💡 Tip of the Day: {tip_text}
             </div>
             """,
             unsafe_allow_html=True,
         )
 
+        # Download file
+        import textwrap, base64
         summary_text = textwrap.dedent(f"""
         FootFit Analyzer - Recommendation
-        ---------------------------------
+        -------------------------------
         Age group: {age_group}
         Gender: {gender}
         Weight group: {weight_group}
@@ -402,36 +375,36 @@ elif st.session_state.step == 3:
         Foot type: {foot_type}
         Preferred footwear: {footwear_pref}
 
-        Recommended Shoe: {display_brand}
-        Material: {display_material}
-        Justification: {display_justification}
+        Recommended Shoe: {brand}
+        Material: {material}
+        Justification: {justification}
+        Tip of the Day: {tip_text}
         """)
         b64 = base64.b64encode(summary_text.encode()).decode()
-        download_href = f"""
-        <a download="footfit_recommendation.txt" href="data:text/plain;base64,{b64}"
-           style="background-color:#ff4da6; color:white; padding:10px 14px; border-radius:8px;
-                  text-decoration:none; font-weight:bold; display:inline-block;">
-           📄 Download Recommendation (txt)
-        </a>
-        """
-        st.markdown(download_href, unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <a download="footfit_recommendation.txt"
+               href="data:text/plain;base64,{b64}"
+               style="background-color:#ff4da6; color:white; padding:10px 14px; border-radius:8px;
+                      text-decoration:none; font-weight:bold; display:inline-block;">
+               📄 Download Recommendation (txt)
+            </a>
+            """,
+            unsafe_allow_html=True,
+        )
 
-        # Read-aloud & Back button aligned left
+        # Read aloud + Back button
         col_btn1, col_btn2 = st.columns([1, 4])
         with col_btn1:
-            st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
-            # When read_aloud is checked, use the stable saved values (or placeholders) and include tip
-            if st.session_state.get("read_aloud", False):
-                text_to_speak = (
-                    f"Recommendation: {display_brand}. "
-                    f"Material: {display_material}. "
-                    f"Justification: {display_justification}. "
-                    f"Tip of the day: {tip_text}."
+            if st.checkbox("🔊 Read recommendation aloud", key="read_aloud"):
+                speak_text(
+                    f"I recommend {brand}. Material: {material}. "
+                    f"{justification}. Tip of the day: {tip_text}."
                 )
-                speak_text(text_to_speak)
             if st.button("← Back", key="back_to_step2"):
                 st.session_state.step = 2
 
+    # Virtual Shoe Wall
     with rec_col2:
         st.subheader("👟 Virtual Shoe Wall")
 
@@ -455,11 +428,12 @@ elif st.session_state.step == 3:
         for url in selected_urls:
             html_images += f"""
             <div style='flex:1 0 45%; margin:5px;'>
-                <img src='{url}' width='180' style='border-radius:8px;'/>
+                <img src='{url}' width='180' style='border-radius:8px;'/> 
             </div>
             """
         html_images += "</div>"
         st.markdown(html_images, unsafe_allow_html=True)
+
 
 
 
