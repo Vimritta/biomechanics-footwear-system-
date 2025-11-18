@@ -212,6 +212,7 @@ elif st.session_state.step == 2:
 elif st.session_state.step == 3:
     st.header("Step 3 — Recommendation & Biomechanics Summary")
 
+    # Helper
     def get_val(key, default):
         return st.session_state.inputs.get(key, st.session_state.get(key, default))
 
@@ -225,7 +226,9 @@ elif st.session_state.step == 3:
 
     set_activity_theme(activity_key)
 
-    # 🎤 Greeting with all age groups
+    # ------------------------------
+    # Greeting (All Age Groups)
+    # ------------------------------
     def get_greeting(age, gender):
         if "Under 18" in age:
             if gender == "Male":
@@ -258,7 +261,10 @@ elif st.session_state.step == 3:
         return "Hello there! Let’s find your fit!"
 
     greeting_text = get_greeting(age_group, gender)
-    st.markdown(f"<h4 style='color:#5e3a96; font-weight:700;'>{greeting_text}</h4>", unsafe_allow_html=True)
+    st.markdown(
+        f"<h4 style='color:#5e3a96; font-weight:700;'>{greeting_text}</h4>",
+        unsafe_allow_html=True,
+    )
     speak_text(greeting_text)
 
     # Walking GIF
@@ -268,168 +274,180 @@ elif st.session_state.step == 3:
         unsafe_allow_html=True,
     )
 
-    # Analyze & Start Over buttons
+    # ------------------------------
+    # ANALYZE + START OVER
+    # ------------------------------
     col_a1, col_a2, col_a3 = st.columns([1, 1, 2])
+
     with col_a1:
-if st.button("Analyze", key="analyze_btn"):
-    st.session_state.analyze_clicked = True
+        if st.button("Analyze", key="analyze_btn"):
+            # Generate recommendation ONCE
+            brand, material, justification = recommend(
+                foot_type, weight_group, activity_label, footwear_pref, age_group, gender
+            )
 
-    # Save stable recommendation
-    brand, material, justification = recommend(
-        foot_type, weight_group, activity_label, footwear_pref, age_group, gender
-    )
-    st.session_state.saved_brand = brand
-    st.session_state.saved_material = material
-    st.session_state.saved_justification = justification
+            import random
+            tips = [
+                "Stretch your calves daily to reduce heel strain.",
+                "Replace running shoes every 500–800 km.",
+                "Use orthotic insoles when experiencing arch pain.",
+                "Air-dry shoes after workouts to prevent odor.",
+                "Perform ankle rotations to strengthen stabilizers."
+            ]
+            tip_text = random.choice(tips)
 
-    # Save stable tip of the day
-    st.session_state.saved_tip = random.choice([
-        "Stretch your calves daily to reduce heel strain.",
-        "Replace running shoes every 500–800 km.",
-        "Use orthotic insoles when experiencing arch pain.",
-        "Air-dry shoes after workouts to prevent odor and damage.",
-        "Perform ankle rotations to strengthen stabilizers."
-    ])
-            
+            # Store final results
+            st.session_state.final_brand = brand
+            st.session_state.final_material = material
+            st.session_state.final_justification = justification
+            st.session_state.final_tip = tip_text
+
+            st.session_state.analyze_clicked = True
+            speak_text(f"Recommendation ready. {brand} recommended.")
+
     with col_a3:
         if st.button("🔁 Start Over", key="start_over"):
             st.session_state.step = 1
             st.session_state.inputs = {}
-            st.session_state.foot_type = "Normal Arch"
-            st.session_state.footwear_pref = "Running shoes"
             st.session_state.analyze_clicked = False
+            st.session_state.final_brand = None
+            st.session_state.final_material = None
+            st.session_state.final_justification = None
+            st.session_state.final_tip = None
 
-    # Recommendation logic
-    brand, material, justification = recommend(
-        foot_type, weight_group, activity_label, footwear_pref, age_group, gender
-    )
-    if st.session_state.analyze_clicked:
-        speak_text(f"Recommendation ready. {brand} recommended.")
+    # ------------------------------
+    # SHOW RECOMMENDATION ONLY IF ANALYZED
+    # ------------------------------
+    if st.session_state.get("analyze_clicked", False):
 
-    # Biomechanics Summary
-    summary_md = f"""
-    <div class="summary-card">
-      <h3>🧠 <b>Biomechanics Summary</b></h3>
-      <p class="highlight-box">
-        👤 <b>Age:</b> {age_group} &nbsp; 🚻 <b>Gender:</b> {gender} <br/>
-        ⚖️ <b>Weight:</b> {weight_group} &nbsp; 🏃 <b>Activity:</b> {activity_label} <br/>
-        🦶 <b>Foot Type:</b> {foot_type} &nbsp; 👟 <b>Preference:</b> {footwear_pref}
-      </p>
-    </div>
-    """
-    st.markdown(summary_md, unsafe_allow_html=True)
-    st.markdown("---")
+        brand = st.session_state.final_brand
+        material = st.session_state.final_material
+        justification = st.session_state.final_justification
+        tip_text = st.session_state.final_tip
 
-    # Recommendation boxes & Virtual Shoe Wall
-    rec_col1, rec_col2 = st.columns([2, 1])
-    with rec_col1:
-        st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
-
-        import html as html_mod
-        justification_safe = html_mod.escape(justification)
-        st.markdown(
-            f"""
-            <div style="
-                background-color:#d2b48c;
-                border-left:6px solid #8b6f47;
-                padding:10px 14px;
-                border-radius:8px;
-                margin-top:8px;
-                font-weight:600;
-                color:#222;">
-                💬 Justification: {justification_safe}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        import random, textwrap, base64
-        tips = [
-            "Stretch your calves daily to reduce heel strain.",
-            "Replace running shoes every 500–800 km.",
-            "Use orthotic insoles when experiencing arch pain.",
-            "Air-dry shoes after workouts to prevent odor and damage.",
-            "Perform ankle rotations to strengthen stabilizers."
-        ]
-      tip_text = st.session_state.get("saved_tip", "Click Analyze to generate tip.")
-        st.markdown(
-            f"""
-            <div style="
-                background-color:#fff9c4;
-                border-left:6px solid #ffd54f;
-                padding:10px 14px;
-                border-radius:8px;
-                margin-top:8px;
-                font-weight:600;
-                color:#333;">
-                💡 Tip of the Day: {tip_text}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        summary_text = textwrap.dedent(f"""
-        FootFit Analyzer - Recommendation
-        ---------------------------------
-        Age group: {age_group}
-        Gender: {gender}
-        Weight group: {weight_group}
-        Activity level: {activity_label}
-        Foot type: {foot_type}
-        Preferred footwear: {footwear_pref}
-
-        Recommended Shoe: {brand}
-        Material: {material}
-        Justification: {justification}
-        """)
-        b64 = base64.b64encode(summary_text.encode()).decode()
-        download_href = f"""
-        <a download="footfit_recommendation.txt" href="data:text/plain;base64,{b64}"
-           style="background-color:#ff4da6; color:white; padding:10px 14px; border-radius:8px;
-                  text-decoration:none; font-weight:bold; display:inline-block;">
-           📄 Download Recommendation (txt)
-        </a>
+        # Summary
+        summary_md = f"""
+        <div class="summary-card">
+          <h3>🧠 <b>Biomechanics Summary</b></h3>
+          <p class="highlight-box">
+            👤 <b>Age:</b> {age_group} &nbsp; 🚻 <b>Gender:</b> {gender} <br/>
+            ⚖️ <b>Weight:</b> {weight_group} &nbsp; 🏃 <b>Activity:</b> {activity_label} <br/>
+            🦶 <b>Foot Type:</b> {foot_type} &nbsp; 👟 <b>Preference:</b> {footwear_pref}
+          </p>
+        </div>
         """
-        st.markdown(download_href, unsafe_allow_html=True)
+        st.markdown(summary_md, unsafe_allow_html=True)
+        st.markdown("---")
 
-        # Read-aloud & Back button aligned left
-        col_btn1, col_btn2 = st.columns([1, 4])
-        with col_btn1:
-            st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
-            if st.session_state.get("read_aloud", False):
-                speak_text(f"I recommend {brand}. Material: {material}. {justification}")
-            if st.button("← Back", key="back_to_step2"):
-                st.session_state.step = 2
+        # ------------------------------
+        # Recommendation + Shoe Wall
+        # ------------------------------
+        rec_col1, rec_col2 = st.columns([2, 1])
+        with rec_col1:
+            st.markdown(f"<div class='rec-shoe'>👟 <b>Recommended Shoe:</b> {brand}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='rec-material'>🧵 <b>Material:</b> {material}</div>", unsafe_allow_html=True)
 
-    with rec_col2:
-        st.subheader("👟 Virtual Shoe Wall")
+            import html as html_mod
+            justification_safe = html_mod.escape(justification)
+            st.markdown(
+                f"""
+                <div style="
+                    background-color:#d2b48c;
+                    border-left:6px solid #8b6f47;
+                    padding:10px 14px;
+                    border-radius:8px;
+                    margin-top:8px;
+                    font-weight:600;
+                    color:#222;">
+                    💬 Justification: {justification_safe}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-        shoe_wall_urls = {
-            "Running shoes": [
-                "https://cdn.thewirecutter.com/wp-content/media/2024/11/runningshoes-2048px-09522.jpg?auto=webp&quality=75&width=1024"
-            ],
-            "Cross-training shoes": [
-                "https://marathonhandbook.com/wp-content/uploads/cross-training-shoes-3.jpg"
-            ],
-            "Casual/fashion sneakers": [
-                "https://t3.ftcdn.net/jpg/01/88/73/94/360_F_188739476_0ya1CUvG0a6JN5gQnonzEbrFDyBNX5iO.jpg"
-            ],
-            "Sandals or slippers": [
-                "https://st2.depositphotos.com/4678277/8421/i/450/depositphotos_84214128-stock-photo-legs-of-loving-couples-on.jpg"
-            ]
-        }
+            st.markdown(
+                f"""
+                <div style="
+                    background-color:#fff9c4;
+                    border-left:6px solid #ffd54f;
+                    padding:10px 14px;
+                    border-radius:8px;
+                    margin-top:8px;
+                    font-weight:600;
+                    color:#333;">
+                    💡 Tip of the Day: {tip_text}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-        selected_urls = shoe_wall_urls.get(footwear_pref, [])
-        html_images = "<div style='display:flex; flex-wrap:wrap;'>"
-        for url in selected_urls:
-            html_images += f"""
-            <div style='flex:1 0 45%; margin:5px;'>
-                <img src='{url}' width='180' style='border-radius:8px;'/>
-            </div>
+            # Download
+            import textwrap, base64
+            summary_text = textwrap.dedent(f"""
+            FootFit Analyzer - Recommendation
+            ---------------------------------
+            Age group: {age_group}
+            Gender: {gender}
+            Weight group: {weight_group}
+            Activity level: {activity_label}
+            Foot type: {foot_type}
+            Preferred footwear: {footwear_pref}
+
+            Recommended Shoe: {brand}
+            Material: {material}
+            Justification: {justification}
+            """)
+            b64 = base64.b64encode(summary_text.encode()).decode()
+            download_href = f"""
+            <a download="footfit_recommendation.txt" href="data:text/plain;base64,{b64}"
+               style="background-color:#ff4da6; color:white; padding:10px 14px; border-radius:8px;
+                      text-decoration:none; font-weight:bold; display:inline-block;">
+               📄 Download Recommendation (txt)
+            </a>
             """
-        html_images += "</div>"
-        st.markdown(html_images, unsafe_allow_html=True)
+            st.markdown(download_href, unsafe_allow_html=True)
+
+            # Read aloud + Back
+            col_btn1, col_btn2 = st.columns([1, 4])
+            with col_btn1:
+                st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
+                if st.session_state.get("read_aloud", False):
+                    speak_text(f"I recommend {brand}. Material: {material}. {justification}")
+                if st.button("← Back", key="back_to_step2"):
+                    st.session_state.step = 2
+
+        # ------------------------------
+        # Shoe Wall
+        # ------------------------------
+        with rec_col2:
+            st.subheader("👟 Virtual Shoe Wall")
+
+            shoe_wall_urls = {
+                "Running shoes": [
+                    "https://cdn.thewirecutter.com/wp-content/media/2024/11/runningshoes-2048px-09522.jpg?auto=webp&quality=75&width=1024"
+                ],
+                "Cross-training shoes": [
+                    "https://marathonhandbook.com/wp-content/uploads/cross-training-shoes-3.jpg"
+                ],
+                "Casual/fashion sneakers": [
+                    "https://t3.ftcdn.net/jpg/01/88/73/94/360_F_188739476_0ya1CUvG0a6JN5gQnonzEbrFDyBNX5iO.jpg"
+                ],
+                "Sandals or slippers": [
+                    "https://st2.depositphotos.com/4678277/8421/i/450/depositphotos_84214128-stock-photo-legs-of-loving-couples-on.jpg"
+                ]
+            }
+
+            selected_urls = shoe_wall_urls.get(footwear_pref, [])
+            html_images = "<div style='display:flex; flex-wrap:wrap;'>"
+            for url in selected_urls:
+                html_images += f"""
+                <div style='flex:1 0 45%; margin:5px;'>
+                    <img src='{url}' width='180' style='border-radius:8px;'/>
+                </div>
+                """
+            html_images += "</div>"
+            st.markdown(html_images, unsafe_allow_html=True)
+
 
 
   
