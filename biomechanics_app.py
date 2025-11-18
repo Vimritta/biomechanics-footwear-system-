@@ -271,8 +271,26 @@ elif st.session_state.step == 3:
     # Analyze & Start Over buttons
     col_a1, col_a2, col_a3 = st.columns([1, 1, 2])
     with col_a1:
-        if st.button("Analyze", key="analyze_btn"):
-            st.session_state.analyze_clicked = True
+if st.button("Analyze", key="analyze_btn"):
+    st.session_state.analyze_clicked = True
+
+    # Save stable recommendation
+    brand, material, justification = recommend(
+        foot_type, weight_group, activity_label, footwear_pref, age_group, gender
+    )
+    st.session_state.saved_brand = brand
+    st.session_state.saved_material = material
+    st.session_state.saved_justification = justification
+
+    # Save stable tip of the day
+    st.session_state.saved_tip = random.choice([
+        "Stretch your calves daily to reduce heel strain.",
+        "Replace running shoes every 500–800 km.",
+        "Use orthotic insoles when experiencing arch pain.",
+        "Air-dry shoes after workouts to prevent odor and damage.",
+        "Perform ankle rotations to strengthen stabilizers."
+    ])
+            
     with col_a3:
         if st.button("🔁 Start Over", key="start_over"):
             st.session_state.step = 1
@@ -334,7 +352,7 @@ elif st.session_state.step == 3:
             "Air-dry shoes after workouts to prevent odor and damage.",
             "Perform ankle rotations to strengthen stabilizers."
         ]
-        tip_text = random.choice(tips)
+      tip_text = st.session_state.get("saved_tip", "Click Analyze to generate tip.")
         st.markdown(
             f"""
             <div style="
