@@ -391,11 +391,15 @@ elif st.session_state.step == 3:
 
         col_btn1, col_btn2 = st.columns([1, 4])
         with col_btn1:
-            st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
-            if st.session_state.get("read_aloud", False):
-                speak_text(f"I recommend {brand}. Material: {material}. {justification}")
-            if st.button("← Back", key="back_to_step2"):
-                st.session_state.step = 2
+    st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
+    if st.session_state.get("read_aloud", False):
+        speak_text(
+            f"I recommend {brand}. The material is {material}. "
+            f"Here is your tip of the day: {tip_text}. "
+            f"Reason: {justification}"
+        )
+    if st.button("← Back", key="back_to_step2"):
+        st.session_state.step = 2
 
     with rec_col2:
         st.subheader("👟 Virtual Shoe Wall")
