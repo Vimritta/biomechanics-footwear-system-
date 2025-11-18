@@ -389,9 +389,10 @@ elif st.session_state.step == 3:
         """
         st.markdown(download_href, unsafe_allow_html=True)
 
-        col_btn1, col_btn2 = st.columns([1, 4])
+       # Read-aloud & Back button aligned left
+col_btn1, col_btn2 = st.columns([1, 4])
 
-        with col_btn1:
+with col_btn1:
     st.checkbox("🔊 Read recommendation aloud", key="read_aloud")
     if st.session_state.get("read_aloud", False):
         speak_text(
